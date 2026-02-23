@@ -1,5 +1,9 @@
-﻿<template>
-  <BasicLayout />
+<template>
+  <div id="app">
+    <BasicLayout>
+      <router-view />
+    </BasicLayout>
+  </div>
 </template>
 
 <script setup>

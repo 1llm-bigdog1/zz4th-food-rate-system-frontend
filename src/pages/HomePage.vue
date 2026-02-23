@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="home-page">
         <div id="dish-show">
             <div class="dish-show-header">

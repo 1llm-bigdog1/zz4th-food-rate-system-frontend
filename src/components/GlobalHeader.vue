@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="GlobalHeader">
         <div class="header-inner">
             <router-link to="/" class="brand-link">
