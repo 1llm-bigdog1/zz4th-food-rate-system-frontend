@@ -1,0 +1,300 @@
+﻿<template>
+    <div id="home-page">
+        <div id="dish-show">
+            <div class="dish-show-header">
+                <span class="dish-show-title">菜品总览</span>
+            </div>
+            <div class="dish-show-divider"></div>
+            <div id="home-grid">
+                <a-row :gutter="[16, 16]">
+                    <a-col v-for="dish in dishes" :key="dish.id" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                        <a-card hoverable class="dish-card">
+                            <template #cover>
+                                <img :alt="dish.name" :src="dish.image" />
+                            </template>
+                            <template #actions>
+                                <a-button type="text" class="detail-btn">查看详情</a-button>
+                            </template>
+                            <a-card-meta :title="dish.name" :description="`${dish.position.stair}楼${dish.position.window}号窗口`">
+                                <template #avatar>
+                                    <a-avatar src="https://joeschmoe.io/api/v1/random" />
+                                </template>
+                            </a-card-meta>
+                            <span>
+                                <a-rate v-model:value="dish.rate" :tooltips="desc" disabled />
+                                <span class="ant-rate-text">{{ dish.rate }}</span>
+                            </span>
+                        </a-card>
+                    </a-col>
+                </a-row>
+            </div>
+            <a-row id="want-more" justify="center">
+                <a-col :flex="'0 0 auto'" class="see-more-col">
+                    <a-button type="default" size="large" class="see-more-button">查看更多菜品</a-button>
+                </a-col>
+            </a-row>
+        </div>
+        <div id="rank-show">
+            <span class="dish-show-title">每日排名</span>
+            <a-table :columns="columns" :data-source="dishTableData" :row-key="record => record.id">
+                <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'rank'">
+                        <span class="rank-cell">
+                            <crown-filled v-if="record.rank <= 3" :class="`rank-crown rank-${record.rank}`" />
+                            <span v-else class="rank-number">{{ record.rank }}</span>
+                        </span>
+                    </template>
+                    <template v-else-if="column.key === 'rate'">
+                        <span class="table-rate">
+                            <a-rate :value="record.rate" disabled />
+                            <span class="table-rate-number">{{ record.rate }}</span>
+                        </span>
+                    </template>
+                </template>
+            </a-table>
+            <a-row id="rank-more" justify="center">
+                <a-col :flex="'0 0 auto'" class="see-more-col">
+                    <a-button type="default" size="large" class="see-more-button">查看更多</a-button>
+                </a-col>
+            </a-row>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue';
+import { CrownFilled } from '@ant-design/icons-vue';
+import noImage from '@/static/no_image.png';
+
+class Dish {
+    constructor(id, name, position, image, rate, price) {
+        this.id = id;
+        this.name = name;
+        this.position = position;
+        this.image = image;
+        this.rate = rate;
+        this.price = price;
+    }
+}
+
+const dishes = ref([
+    new Dish(1, '红烧肉', { stair: 1, window: 2 }, noImage, 5.0, 10),
+    new Dish(2, '宫保鸡丁', { stair: 1, window: 4 }, noImage, 3.5, 15),
+    new Dish(3, '鱼香肉丝', { stair: 2, window: 1 }, noImage, 4.2, 20),
+    new Dish(4, '番茄炒蛋', { stair: 2, window: 3 }, noImage, 4.0, 25),
+    new Dish(5, '青椒土豆丝', { stair: 1, window: 6 }, noImage, 3.8, 30),
+    new Dish(6, '麻婆豆腐', { stair: 3, window: 2 }, noImage, 4.5, 35),
+    new Dish(7, '酸菜鱼', { stair: 3, window: 5 }, noImage, 4.3, 40),
+    new Dish(8, '豆腐煲', { stair: 2, window: 6 }, noImage, 4.1, 45),
+]);
+
+dishes.value.sort((a, b) => b.rate - a.rate);
+
+const columns = [
+    {
+        title: '排名',
+        dataIndex: 'rank',
+        key: 'rank',
+        width: 90,
+    },
+    {
+        title: '菜品名称',
+        dataIndex: 'name',
+        key: 'name',
+    },
+    {
+        title: '菜品位置',
+        dataIndex: 'position',
+        key: 'position',
+    },
+    {
+        title: '评分',
+        dataIndex: 'rate',
+        key: 'rate',
+    },
+    {
+        title: '价格(元)',
+        dataIndex: 'price',
+        key: 'price',
+    },
+];
+
+const dishTableData = computed(() =>
+    dishes.value.map((dish, index) => ({
+        id: dish.id,
+        rank: index + 1,
+        name: dish.name,
+        position: `${dish.position.stair}楼${dish.position.window}号窗口`,
+        rate: dish.rate,
+        price: dish.price,
+    })),
+);
+</script>
+
+<style scoped>
+#home-grid {
+    width: 100%;
+}
+
+#dish-show {
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 16px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    margin-bottom: 20px;
+}
+
+#dish-show:hover {
+    border-color: #d9d9d9;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+#rank-show {
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 16px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#rank-show .dish-show-title {
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+#rank-show:hover {
+    border-color: #d9d9d9;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dish-show-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 6px 4px 10px;
+}
+
+.dish-show-title {
+    font-family: 'Noto Serif SC', 'Microsoft YaHei', serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #1f1f1f;
+    letter-spacing: 0.5px;
+}
+
+.dish-show-divider {
+    height: 1px;
+    background: #e9e9e9;
+    margin: 0 4px 18px;
+}
+
+#want-more {
+    margin-top: 16px;
+}
+
+#rank-more {
+    margin-top: 16px;
+}
+
+.see-more-button {
+    width: 200px;
+    background: #fff;
+    color: #1f1f1f;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 0 22px;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.see-more-col {
+    display: flex;
+    justify-content: center;
+}
+
+.see-more-button:hover,
+.see-more-button:focus {
+    background: #ff4d4f;
+    border-color: #ff4d4f;
+    color: #fff;
+}
+
+#home-grid .grid-card {
+    min-height: clamp(90px, 16vw, 140px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: #0092ff;
+    border-radius: 4px;
+    color: #fff;
+}
+
+:deep(.dish-card) {
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+:deep(.dish-card:hover) {
+    border-color: #d9d9d9;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+:deep(.detail-btn) {
+    width: 100%;
+    height: 48px;
+    border-radius: 0 0 8px 8px;
+    color: #000;
+}
+
+:deep(.detail-btn:hover),
+:deep(.detail-btn:focus) {
+    background-color: #ff4d4f;
+    color: #fff;
+}
+
+:deep(.dish-card .ant-card-actions > li) {
+    margin: 0;
+}
+
+:deep(.dish-card .ant-card-actions > li > span) {
+    display: block;
+}
+
+.rank-cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.rank-crown {
+    font-size: 18px;
+}
+
+.rank-1 {
+    color: #d4af37;
+}
+
+.rank-2 {
+    color: #c0c0c0;
+}
+
+.rank-3 {
+    color: #cd7f32;
+}
+
+.rank-number {
+    font-weight: 600;
+    color: #1f1f1f;
+}
+
+.table-rate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-rate-number {
+    color: #1f1f1f;
+    font-weight: 600;
+}
+</style>
