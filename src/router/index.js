@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../pages/HomePage.vue';
 import LoginPage from '../pages/user/LoginPage.vue';
 import RegisterPage from '../pages/user/RegisterPage.vue';
+import AccountDetailPage from '../pages/user/AccountDetail.vue';
 
 const routes = [
   {
@@ -19,6 +20,11 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterPage
+  },
+  {
+    path: '/account',
+    name: 'AccountDetail',
+    component: AccountDetailPage
   },
   // 可在此添加更多路由
 ];
