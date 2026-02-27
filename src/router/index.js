@@ -4,6 +4,7 @@ import HomePage from '../pages/HomePage.vue';
 import LoginPage from '../pages/user/LoginPage.vue';
 import RegisterPage from '../pages/user/RegisterPage.vue';
 import AccountDetailPage from '../pages/user/AccountDetail.vue';
+import DishesList from '../pages/rating/DishesList.vue';
 // import SelectionList from '@/pages/selection/SelectionList.vue';
 // import SecectionList from '../pages/selection/SelectionAdding.vue';
 
@@ -27,6 +28,11 @@ const routes = [
     path: '/account',
     name: 'AccountDetail',
     component: AccountDetailPage
+  },
+  {
+    path: '/dishes',
+    name: 'DishesList',
+    component: DishesList
   },
   // {
   //   path: '/selectionlist',

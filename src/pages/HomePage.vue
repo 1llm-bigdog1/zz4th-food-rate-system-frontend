@@ -64,18 +64,8 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { CrownFilled } from '@ant-design/icons-vue';
+import Dish from '@/models/Dish';
 import noImage from '@/static/no_image.png';
-
-class Dish {
-    constructor(id, name, position, image, rate, price) {
-        this.id = id;
-        this.name = name;
-        this.position = position;
-        this.image = image;
-        this.rate = rate;
-        this.price = price;
-    }
-}
 
 const dishes = ref([
     new Dish(1, '红烧肉', { stair: 1, window: 2 }, noImage, 5.0, 10),
