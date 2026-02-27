@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="user-details-page">
         <!-- TODO: 页面内容 -->
     </div>

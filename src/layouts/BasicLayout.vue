@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="basic-layout">
         <a-layout>
             <!-- 顶部全局导航 -->

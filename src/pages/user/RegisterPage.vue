@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="register-page">
         <div class="register-shell">
             <a-card class="register-card" :bordered="false">

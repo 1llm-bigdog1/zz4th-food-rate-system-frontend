@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="selection-adding-page">
         <!-- TODO: 页面内容 -->
     </div>

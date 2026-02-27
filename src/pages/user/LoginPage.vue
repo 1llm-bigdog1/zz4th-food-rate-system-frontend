@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <div id="login-page">
         <div class="login-shell">
             <a-card class="signin-card" :bordered="false">
