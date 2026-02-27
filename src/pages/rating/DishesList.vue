@@ -20,8 +20,8 @@
                     </template>
                     <template v-else-if="column.key === 'action'">
                         <a-space>
-                            <a-button type="default" size="small">{{ text.addData }}</a-button>
-                            <a-button type="primary" size="small">{{ text.rateNow }}</a-button>
+                            <a-button type="default" size="small" @click="openEditModal(record)">{{ text.addData }}</a-button>
+                            <a-button type="primary" size="small" @click="openRatingModal(record)">{{ text.rateNow }}</a-button>
                         </a-space>
                     </template>
                 </template>
@@ -34,11 +34,45 @@
                 </a-col>
             </a-row>
         </div>
+
+        <a-modal :open="ratingModalVisible" :title="ratingModalTitle" :footer="null" centered @cancel="closeRatingModal">
+            <div class="rating-modal-content">
+                <div class="rating-row">
+                    <a-rate v-model:value="ratingValue" allow-half :tooltips="ratingDesc" />
+                    <span class="rating-desc">{{ ratingDescText }}</span>
+                </div>
+                <a-button type="primary" @click="submitRating">{{ text.submitRating }}</a-button>
+            </div>
+        </a-modal>
+
+        <a-modal :open="editModalVisible" :title="editModalTitle" :footer="null" centered @cancel="closeEditModal">
+            <div class="rating-modal-content">
+                <div class="form-section">
+                    <div class="section-title">{{ text.uploadImage }}</div>
+                    <a-upload v-model:file-list="editForm.fileList" :before-upload="() => false" list-type="picture">
+                        <a-button>{{ text.uploadBtn }}</a-button>
+                    </a-upload>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">{{ text.modifyPosition }}</div>
+                    <a-space>
+                        <a-select v-model:value="editForm.stair" :options="floorOptions" :placeholder="text.floorPlaceholder" style="width: 120px" />
+                        <a-select v-model:value="editForm.window" :options="windowOptions" :placeholder="text.windowPlaceholder" style="width: 120px" />
+                    </a-space>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">{{ text.modifyPrice }}</div>
+                    <a-input-number v-model:value="editForm.price" :min="0" :step="0.5" :precision="1" style="width: 240px" :placeholder="text.pricePlaceholder" />
+                </div>
+                <a-button type="primary" @click="submitModify">{{ text.submitModify }}</a-button>
+            </div>
+        </a-modal>
     </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
+import { message } from 'ant-design-vue';
 import Dish from '@/models/Dish';
 import noImage from '@/static/no_image.png';
 
@@ -51,8 +85,21 @@ const text = {
     price: '\u4ef7\u683c(\u5143)',
     action: '\u64cd\u4f5c',
     viewImage: '\u67e5\u770b\u56fe\u7247',
-    addData: '\u8865\u5145\u6570\u636e',
+    addData: '\u8865\u5145\u8bc4\u5206',
     rateNow: '\u6211\u8981\u8bc4\u5206',
+    submitRating: '\u63d0\u4ea4\u8bc4\u5206',
+    submitModify: '\u63d0\u4ea4\u4fee\u6539',
+    rateTitlePrefix: '\u5bf9',
+    rateTitleSuffix: '\u8fdb\u884c\u8bc4\u5206',
+    modifyTitleSuffix: '\u8fdb\u884c\u4fe1\u606f\u4fee\u6539',
+    uploadImage: '\u4e0a\u4f20\u56fe\u7247',
+    modifyPosition: '\u4f4d\u7f6e\u4fee\u6539',
+    modifyPrice: '\u4ef7\u683c',
+    floorPlaceholder: '\u9009\u62e9\u697c\u5c42',
+    windowPlaceholder: '\u9009\u62e9\u7a97\u53e3',
+    pricePlaceholder: '\u8bf7\u8f93\u5165\u4ef7\u683c',
+    uploadBtn: '\u70b9\u51fb\u4e0a\u4f20',
+    modifySuccess: '\u611f\u8c22\u4f60\u7684\u8d21\u732e\uff0c\u4fee\u6539\u540e\u7684\u6570\u636e\u4f1a\u5728\u5ba1\u6838\u540e\u663e\u793a',
     floor: '\u697c',
     window: '\u53f7\u7a97\u53e3',
 };
@@ -123,9 +170,66 @@ const visibleTableData = computed(() =>
 );
 
 const hasMore = computed(() => visibleCount.value < sortedDishes.value.length);
+const ratingModalVisible = ref(false);
+const ratingDishName = ref('');
+const ratingValue = ref(0);
+const ratingDesc = ['0.5', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'];
+
+const ratingDescText = computed(() => {
+    if (ratingValue.value <= 0) return '';
+    const index = Math.round(ratingValue.value * 2) - 1;
+    return ratingDesc[index] || '';
+});
+
+const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingDishName.value}${text.rateTitleSuffix}`);
+const editModalVisible = ref(false);
+const editDishName = ref('');
+const editForm = ref({
+    fileList: [],
+    stair: null,
+    window: null,
+    price: null,
+});
+const floorOptions = [1, 2, 3, 4, 5].map((v) => ({ label: `${v}${text.floor}`, value: v }));
+const windowOptions = Array.from({ length: 12 }, (_, i) => i + 1).map((v) => ({ label: `${v}${text.window}`, value: v }));
+const editModalTitle = computed(() => `${text.rateTitlePrefix}${editDishName.value}${text.modifyTitleSuffix}`);
 
 const loadMore = () => {
     visibleCount.value = Math.min(visibleCount.value + pageSize, sortedDishes.value.length);
+};
+
+const openRatingModal = (record) => {
+    ratingDishName.value = record.name;
+    ratingValue.value = 0;
+    ratingModalVisible.value = true;
+};
+
+const closeRatingModal = () => {
+    ratingModalVisible.value = false;
+};
+
+const submitRating = () => {
+    ratingModalVisible.value = false;
+};
+
+const openEditModal = (record) => {
+    editDishName.value = record.name;
+    editForm.value = {
+        fileList: [],
+        stair: null,
+        window: null,
+        price: record.price,
+    };
+    editModalVisible.value = true;
+};
+
+const closeEditModal = () => {
+    editModalVisible.value = false;
+};
+
+const submitModify = () => {
+    editModalVisible.value = false;
+    message.success(text.modifySuccess);
 };
 </script>
 
@@ -190,5 +294,38 @@ const loadMore = () => {
 .table-rate-number {
     color: #1f1f1f;
     font-weight: 600;
+}
+
+.rating-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rating-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rating-desc {
+    color: #595959;
+    min-width: 28px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.section-title {
+    color: #1f1f1f;
+    font-weight: 600;
+}
+
+:deep(.rating-row .ant-rate-star-zero .ant-rate-star-first),
+:deep(.rating-row .ant-rate-star-zero .ant-rate-star-second) {
+    color: #d9d9d9;
 }
 </style>
