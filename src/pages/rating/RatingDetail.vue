@@ -55,8 +55,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { CrownFilled } from '@ant-design/icons-vue';
-import Dish from '@/models/Dish';
-import noImage from '@/static/no_image.png';
+import { createMockDishes } from '@/data/mockData';
 
 const text = {
     standardTitle: '\u6807\u51c6\u6392\u540d',
@@ -73,21 +72,10 @@ const text = {
     window: '\u53f7\u7a97\u53e3',
 };
 
-const dishes = ref([
-    new Dish(1, '\u7ea2\u70e7\u8089', { stair: 1, window: 1 }, noImage, 4.8, 18),
-    new Dish(2, '\u5bab\u4fdd\u9e21\u4e01', { stair: 1, window: 2 }, noImage, 4.6, 16),
-    new Dish(3, '\u9c7c\u9999\u8089\u4e1d', { stair: 1, window: 3 }, noImage, 4.5, 15),
-    new Dish(4, '\u756a\u8304\u7092\u86cb', { stair: 1, window: 4 }, noImage, 4.2, 12),
-    new Dish(5, '\u9752\u6912\u571f\u8c46\u4e1d', { stair: 1, window: 5 }, noImage, 4.1, 10),
-    new Dish(6, '\u9ebb\u5a46\u8c46\u8150', { stair: 1, window: 6 }, noImage, 4.7, 14),
-    new Dish(7, '\u9178\u83dc\u9c7c', { stair: 2, window: 1 }, noImage, 4.9, 26),
-    new Dish(8, '\u53ef\u4e50\u9e21\u7fc5', { stair: 2, window: 2 }, noImage, 4.4, 20),
-    new Dish(9, '\u5496\u55b1\u9e21\u5757', { stair: 2, window: 3 }, noImage, 4.3, 19),
-    new Dish(10, '\u9999\u83c7\u6cb9\u83dc', { stair: 2, window: 4 }, noImage, 4.0, 11),
-    new Dish(11, '\u6c34\u716e\u8089\u7247', { stair: 3, window: 1 }, noImage, 4.8, 24),
-    new Dish(12, '\u756a\u8304\u725b\u8089\u9762', { stair: 3, window: 2 }, noImage, 4.2, 16),
-]);
+// 复用统一菜品样例数据，保证列表/排行榜口径一致。
+const dishes = ref(createMockDishes());
 
+// alpha：口味权重（价格权重 = 1 - alpha）。
 const alpha = ref(0.5);
 watch(alpha, (val) => {
     if (val <= 0) alpha.value = 0.01;

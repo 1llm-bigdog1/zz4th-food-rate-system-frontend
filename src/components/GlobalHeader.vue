@@ -5,50 +5,18 @@
                 <img :src="badgeLogo" alt="logo" class="brand-logo" />
                 <span class="brand-title">{{ text.brandTitle }}</span>
             </router-link>
+
             <a-menu v-model:selectedKeys="current" mode="horizontal" class="header-menu">
-                <a-menu-item key="dishOverview">
+                <!-- 菜单项配置驱动，避免重复模板 -->
+                <a-menu-item v-for="item in menuItems" :key="item.key">
                     <template #icon>
-                        <appstore-outlined />
+                        <component :is="item.icon" />
                     </template>
-                    <router-link to="/dishes">{{ text.dishOverview }}</router-link>
-                </a-menu-item>
-                <a-menu-item key="rating">
-                    <template #icon>
-                        <star-outlined />
-                    </template>
-                    {{ text.rating }}
-                </a-menu-item>
-                <a-menu-item key="rank">
-                    <template #icon>
-                        <trophy-outlined />
-                    </template>
-                    {{ text.rank }}
-                </a-menu-item>
-                <a-menu-item key="selection">
-                    <template #icon>
-                        <crown-outlined />
-                    </template>
-                    {{ text.selection }}
-                </a-menu-item>
-                <a-menu-item key="newSuggestion">
-                    <template #icon>
-                        <bulb-outlined />
-                    </template>
-                    {{ text.newSuggestion }}
-                </a-menu-item>
-                <a-menu-item key="canteenFeedback">
-                    <template #icon>
-                        <message-outlined />
-                    </template>
-                    {{ text.canteenFeedback }}
-                </a-menu-item>
-                <a-menu-item key="dishManage">
-                    <template #icon>
-                        <setting-outlined />
-                    </template>
-                    {{ text.dishManage }}
+                    <router-link v-if="item.to" :to="item.to">{{ item.label }}</router-link>
+                    <span v-else>{{ item.label }}</span>
                 </a-menu-item>
             </a-menu>
+
             <a-avatar size="large" class="header-avatar">
                 <template #icon>
                     <UserOutlined />
@@ -58,50 +26,42 @@
     </div>
 </template>
 
-<script>
-import { defineComponent, ref } from 'vue';
-import { UserOutlined } from '@ant-design/icons-vue';
+<script setup>
+import { ref } from 'vue';
 import {
-    StarOutlined,
     AppstoreOutlined,
-    TrophyOutlined,
-    CrownOutlined,
     BulbOutlined,
+    CrownOutlined,
     MessageOutlined,
     SettingOutlined,
+    StarOutlined,
+    TrophyOutlined,
+    UserOutlined,
 } from '@ant-design/icons-vue';
-import badgeLogo from '../static/badge.png';
+import badgeLogo from '@/static/badge.png';
 
-export default defineComponent({
-    setup() {
-        const current = ref(['dishOverview']);
-        const text = {
-            brandTitle: '\u90d1\u5dde\u5e02\u7b2c\u56db\u9ad8\u7ea7\u4e2d\u5b66\u83dc\u54c1\u8bc4\u5206\u7cfb\u7edf',
-            dishOverview: '\u83dc\u54c1\u603b\u89c8',
-            rating: '\u6211\u8981\u8bc4\u5206',
-            rank: '\u8bc4\u5206\u6392\u884c\u699c',
-            selection: '\u8001\u5403\u5bb6\u4e25\u9009',
-            newSuggestion: '\u65b0\u54c1\u5efa\u8bae',
-            canteenFeedback: '\u98df\u5802\u610f\u89c1',
-            dishManage: '\u83dc\u54c1\u7ba1\u7406',
-        };
-        return {
-            current,
-            text,
-            badgeLogo,
-        };
-    },
-    components: {
-        StarOutlined,
-        AppstoreOutlined,
-        TrophyOutlined,
-        CrownOutlined,
-        BulbOutlined,
-        MessageOutlined,
-        SettingOutlined,
-        UserOutlined,
-    },
-});
+const current = ref(['dishOverview']);
+
+const text = {
+    brandTitle: '郑州市第四高级中学菜品评分系统',
+    dishOverview: '菜品总览',
+    rating: '我要评分',
+    rank: '评分排行榜',
+    selection: '老吃家严选',
+    newSuggestion: '新品建议',
+    canteenFeedback: '食堂意见',
+    dishManage: '菜品管理',
+};
+
+const menuItems = [
+    { key: 'dishOverview', label: text.dishOverview, icon: AppstoreOutlined, to: '/dishes' },
+    { key: 'rating', label: text.rating, icon: StarOutlined, to: null },
+    { key: 'rank', label: text.rank, icon: TrophyOutlined, to: '/rating-detail' },
+    { key: 'selection', label: text.selection, icon: CrownOutlined, to: '/selectionlist' },
+    { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: null },
+    { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: null },
+    { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: null },
+];
 </script>
 
 <style scoped>

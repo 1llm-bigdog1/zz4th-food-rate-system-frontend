@@ -3,16 +3,18 @@
         <a-layout>
             <!-- 顶部全局导航 -->
             <a-layout-header class="header">
-                <global-header position="fixed"></global-header>
+                <global-header />
             </a-layout-header>
-            <!-- 页面主内容渲染区域 -->
+
+            <!-- 页面主内容：由路由渲染 -->
             <a-layout-content class="content">
-                <router-view></router-view>
+                <router-view />
             </a-layout-content>
-            <!-- 全站页脚（固定在窗口底部） -->
+
+            <!-- 全站页脚 -->
             <a-layout-footer class="footer">
                 <div class="footer-inner">
-                    <div class="footer-side">郑州市第四高级中学·食</div>
+                    <div class="footer-side">郑州市第四高级中学</div>
                     <div class="footer-center">
                         <p>&copy; 2026 郑州市第四高级中学菜品评分系统</p>
                         <div class="footer-links">
@@ -28,6 +30,8 @@
                 </div>
             </a-layout-footer>
         </a-layout>
+
+        <!-- 回到顶部按钮 -->
         <div id="components-back-top-demo-custom">
             <a-back-top>
                 <div class="ant-back-top-inner">UP</div>
@@ -48,7 +52,6 @@ export default {
 </script>
 
 <style scoped>
-/* 固定页脚，始终贴底显示 */
 #basic-layout .footer {
     background-color: white;
     border-top: 1px solid #e5e7eb;
@@ -61,7 +64,7 @@ export default {
     z-index: 20;
 }
 
-/* 页脚三栏布局：左侧说明 / 中间主信息 / 右侧占位 */
+/* 页脚三栏：左说明 / 中主信息 / 右说明 */
 #basic-layout .footer-inner {
     max-width: 1200px;
     margin: 0 auto;
@@ -97,7 +100,7 @@ export default {
     width: 180px;
 }
 
-/* 给内容区预留空间，避免被固定页脚遮挡 */
+/* 给内容区预留空间，避免被页脚视觉压缩 */
 #basic-layout .content {
     padding: 24px;
     padding-bottom: 96px;
@@ -115,7 +118,7 @@ export default {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* 回到顶部按钮上移，避免与固定页脚重叠 */
+/* 回顶按钮上移，避免与页脚重叠 */
 #components-back-top-demo-custom .ant-back-top {
     bottom: 100px;
 }

@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '../pages/HomePage.vue';
 import LoginPage from '../pages/user/LoginPage.vue';
@@ -6,9 +5,9 @@ import RegisterPage from '../pages/user/RegisterPage.vue';
 import AccountDetailPage from '../pages/user/AccountDetail.vue';
 import DishesList from '../pages/rating/DishesList.vue';
 import RatingDetail from '../pages/rating/RatingDetail.vue';
-// import SelectionList from '@/pages/selection/SelectionList.vue';
-// import SecectionList from '../pages/selection/SelectionAdding.vue';
+import SelectionList from '../pages/selection/SelectionList.vue';
 
+// 路由表：按页面模块分组，便于后续拆分子路由。
 const routes = [
   {
     path: '/',
@@ -40,15 +39,15 @@ const routes = [
     name: 'RatingDetail',
     component: RatingDetail
   },
-  // {
-  //   path: '/selectionlist',
-  //   name: 'SelectionList',
-  //   component: SelectionList
-  // }
-  // 可在此添加更多路由
+  {
+    path: '/selectionlist',
+    name: 'SelectionList',
+    component: SelectionList
+  }
 ];
 
 const router = createRouter({
+  // 本地开发和部署到根路径时使用 HTML5 History。
   history: createWebHistory(),
   routes
 });

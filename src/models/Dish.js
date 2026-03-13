@@ -1,3 +1,7 @@
+/**
+ * 菜品模型。
+ * position 结构：{ stair: number, window: number }
+ */
 export default class Dish {
     constructor(id, name, position, image, rate, price) {
         this.id = id;

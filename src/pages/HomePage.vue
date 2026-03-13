@@ -5,9 +5,10 @@
                 <span class="dish-show-title">菜品总览</span>
             </div>
             <div class="dish-show-divider"></div>
+
             <div id="home-grid">
                 <a-row :gutter="[16, 16]">
-                    <a-col v-for="dish in dishes" :key="dish.id" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+                    <a-col v-for="dish in previewDishes" :key="dish.id" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
                         <a-card hoverable class="dish-card">
                             <template #cover>
                                 <img :alt="dish.name" :src="dish.image" />
@@ -15,28 +16,26 @@
                             <template #actions>
                                 <a-button type="text" class="detail-btn">查看详情</a-button>
                             </template>
-                            <a-card-meta :title="dish.name" :description="`${dish.position.stair}楼${dish.position.window}号窗口`">
-                                <template #avatar>
-                                    <a-avatar src="https://joeschmoe.io/api/v1/random" />
-                                </template>
-                            </a-card-meta>
+                            <a-card-meta :title="dish.name" :description="`${dish.position.stair}楼${dish.position.window}号窗口`" />
                             <span>
-                                <a-rate v-model:value="dish.rate" :tooltips="desc" disabled />
+                                <a-rate :value="dish.rate" :tooltips="rateTips" disabled allow-half />
                                 <span class="ant-rate-text">{{ dish.rate }}</span>
                             </span>
                         </a-card>
                     </a-col>
                 </a-row>
             </div>
+
             <a-row id="want-more" justify="center">
                 <a-col :flex="'0 0 auto'" class="see-more-col">
                     <a-button type="default" size="large" class="see-more-button">查看更多菜品</a-button>
                 </a-col>
             </a-row>
         </div>
+
         <div id="rank-show">
             <span class="dish-show-title">每日排名</span>
-            <a-table :columns="columns" :data-source="dishTableData" :row-key="record => record.id">
+            <a-table :columns="columns" :data-source="rankData" :row-key="(record) => record.id" :pagination="false">
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'rank'">
                         <span class="rank-cell">
@@ -46,7 +45,7 @@
                     </template>
                     <template v-else-if="column.key === 'rate'">
                         <span class="table-rate">
-                            <a-rate :value="record.rate" disabled />
+                            <a-rate :value="record.rate" disabled allow-half />
                             <span class="table-rate-number">{{ record.rate }}</span>
                         </span>
                     </template>
@@ -64,60 +63,34 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { CrownFilled } from '@ant-design/icons-vue';
-import Dish from '@/models/Dish';
-import noImage from '@/static/no_image.png';
+import { createMockDishes } from '@/data/mockData';
 
-const dishes = ref([
-    new Dish(1, '红烧肉', { stair: 1, window: 2 }, noImage, 5.0, 10),
-    new Dish(2, '宫保鸡丁', { stair: 1, window: 4 }, noImage, 3.5, 15),
-    new Dish(3, '鱼香肉丝', { stair: 2, window: 1 }, noImage, 4.2, 20),
-    new Dish(4, '番茄炒蛋', { stair: 2, window: 3 }, noImage, 4.0, 25),
-    new Dish(5, '青椒土豆丝', { stair: 1, window: 6 }, noImage, 3.8, 30),
-    new Dish(6, '麻婆豆腐', { stair: 3, window: 2 }, noImage, 4.5, 35),
-    new Dish(7, '酸菜鱼', { stair: 3, window: 5 }, noImage, 4.3, 40),
-    new Dish(8, '豆腐煲', { stair: 2, window: 6 }, noImage, 4.1, 45),
-]);
+// 首页只展示前 8 个卡片，排名则基于完整样例数据。
+const dishes = ref(createMockDishes());
+const previewDishes = computed(() => dishes.value.slice(0, 8));
 
-dishes.value.sort((a, b) => b.rate - a.rate);
+const rateTips = ['1', '2', '3', '4', '5'];
 
 const columns = [
-    {
-        title: '排名',
-        dataIndex: 'rank',
-        key: 'rank',
-        width: 90,
-    },
-    {
-        title: '菜品名称',
-        dataIndex: 'name',
-        key: 'name',
-    },
-    {
-        title: '菜品位置',
-        dataIndex: 'position',
-        key: 'position',
-    },
-    {
-        title: '评分',
-        dataIndex: 'rate',
-        key: 'rate',
-    },
-    {
-        title: '价格(元)',
-        dataIndex: 'price',
-        key: 'price',
-    },
+    { title: '排名', dataIndex: 'rank', key: 'rank', width: 90 },
+    { title: '菜品名称', dataIndex: 'name', key: 'name' },
+    { title: '菜品位置', dataIndex: 'position', key: 'position' },
+    { title: '评分', dataIndex: 'rate', key: 'rate' },
+    { title: '价格(元)', dataIndex: 'price', key: 'price' },
 ];
 
-const dishTableData = computed(() =>
-    dishes.value.map((dish, index) => ({
-        id: dish.id,
-        rank: index + 1,
-        name: dish.name,
-        position: `${dish.position.stair}楼${dish.position.window}号窗口`,
-        rate: dish.rate,
-        price: dish.price,
-    })),
+// 排行按评分从高到低。
+const rankData = computed(() =>
+    [...dishes.value]
+        .sort((a, b) => b.rate - a.rate)
+        .map((dish, index) => ({
+            id: dish.id,
+            rank: index + 1,
+            name: dish.name,
+            position: `${dish.position.stair}楼${dish.position.window}号窗口`,
+            rate: dish.rate,
+            price: dish.price,
+        })),
 );
 </script>
 
@@ -204,17 +177,6 @@ const dishTableData = computed(() =>
 .see-more-button:focus {
     background: #ff4d4f;
     border-color: #ff4d4f;
-    color: #fff;
-}
-
-#home-grid .grid-card {
-    min-height: clamp(90px, 16vw, 140px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    background: #0092ff;
-    border-radius: 4px;
     color: #fff;
 }
 

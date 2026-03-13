@@ -1,8 +1,7 @@
 <template>
   <div id="app">
-    <BasicLayout>
-      <router-view />
-    </BasicLayout>
+    <!-- 根组件只负责承载全局布局，具体页面由 BasicLayout 内部 router-view 渲染。 -->
+    <BasicLayout />
   </div>
 </template>
 

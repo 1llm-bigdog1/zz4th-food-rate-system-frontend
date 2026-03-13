@@ -1,0 +1,65 @@
+<template>
+    <a-modal :open="open" :title="title" :footer="null" centered @cancel="$emit('cancel')">
+        <div class="rating-modal-content">
+            <div class="rating-row">
+                <a-rate :value="ratingValue" allow-half :tooltips="tooltips" @update:value="onUpdateRating" />
+                <span class="rating-desc">{{ ratingDescText }}</span>
+            </div>
+            <a-button type="primary" @click="$emit('submit')">{{ submitText }}</a-button>
+        </div>
+    </a-modal>
+</template>
+
+<script>
+export default {
+    name: 'RatingModal',
+    props: {
+        open: { type: Boolean, default: false },
+        title: { type: String, default: '' },
+        ratingValue: { type: Number, default: 0 },
+        submitText: { type: String, default: '提交评分' },
+        tooltips: {
+            type: Array,
+            default: () => ['0.5', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'],
+        },
+    },
+    emits: ['cancel', 'submit', 'update:ratingValue'],
+    computed: {
+        // Human-readable text beside stars, e.g. 4.5
+        ratingDescText() {
+            if (this.ratingValue <= 0) return '';
+            const index = Math.round(this.ratingValue * 2) - 1;
+            return this.tooltips[index] || '';
+        },
+    },
+    methods: {
+        onUpdateRating(value) {
+            this.$emit('update:ratingValue', value);
+        },
+    },
+};
+</script>
+
+<style scoped>
+.rating-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rating-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rating-desc {
+    color: #595959;
+    min-width: 28px;
+}
+
+:deep(.rating-row .ant-rate-star-zero .ant-rate-star-first),
+:deep(.rating-row .ant-rate-star-zero .ant-rate-star-second) {
+    color: #d9d9d9;
+}
+</style>
