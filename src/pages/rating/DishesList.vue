@@ -72,33 +72,19 @@ import { message } from 'ant-design-vue';
 import RatingModal from '@/components/RatingModal.vue';
 import SupplementInfoModal from '@/components/SupplementInfoModal.vue';
 import { buildFloorOptions, buildWindowOptions, createMockDishes } from '@/data/mockData';
+import { dishesListText, sharedText } from '@/models/text';
 
 const text = {
-    pageTitle: '菜品列表',
-    loadMore: '加载更多',
-    name: '菜品名称',
-    position: '菜品位置',
-    rate: '评分',
-    price: '价格(元)',
-    action: '操作',
-    viewImage: '查看图片',
-    addData: '补充信息',
-    rateNow: '我要评分',
-    submitRating: '提交评分',
-    submitModify: '提交修改',
-    rateTitlePrefix: '对',
-    rateTitleSuffix: '进行评分',
-    modifyTitleSuffix: '进行信息修改',
-    uploadImage: '上传图片',
-    modifyPosition: '位置修改',
-    modifyPrice: '价格',
-    floorPlaceholder: '选择楼层',
-    windowPlaceholder: '选择窗口',
-    pricePlaceholder: '请输入价格',
-    uploadBtn: '点击上传',
-    modifySuccess: '感谢你的贡献，修改后的数据会在审核后显示',
-    floor: '楼',
-    window: '号窗口',
+    ...sharedText,
+    ...dishesListText,
+    floorPlaceholder: sharedText.selectFloor,
+    windowPlaceholder: sharedText.selectWindow,
+    pricePlaceholder: sharedText.inputPrice,
+    uploadImage: sharedText.uploadImage,
+    modifyPosition: sharedText.modifyPosition,
+    modifyPrice: sharedText.modifyPrice,
+    submitRating: sharedText.submitRating,
+    submitModify: sharedText.submitModify,
 };
 
 // Shared source for dish demo data.
@@ -119,10 +105,10 @@ const sortedDishes = computed(() =>
 );
 
 const columns = [
-    { title: text.name, dataIndex: 'name', key: 'name' },
-    { title: text.position, dataIndex: 'position', key: 'position' },
+    { title: text.dishName, dataIndex: 'name', key: 'name' },
+    { title: text.dishPosition, dataIndex: 'position', key: 'position' },
     { title: text.rate, dataIndex: 'rate', key: 'rate' },
-    { title: text.price, dataIndex: 'price', key: 'price' },
+    { title: text.priceWithUnit, dataIndex: 'price', key: 'price' },
     { title: text.viewImage, dataIndex: 'imagePreview', key: 'imagePreview', width: 110 },
     { title: text.action, dataIndex: 'action', key: 'action', width: 200 },
 ];

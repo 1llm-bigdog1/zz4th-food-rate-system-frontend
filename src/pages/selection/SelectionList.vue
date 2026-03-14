@@ -1,39 +1,56 @@
 <template>
     <div id="selection-list-page">
         <div id="rank-show">
-            <span class="dish-show-title">{{ text.pageTitle }}</span>
-            <a-list :data-source="visibleSelections" :split="true" class="selection-list">
+            <div class="panel-header">
+                <span class="dish-show-title">{{ text.pageTitle }}</span>
+                <span class="panel-subtitle">{{ text.listSubtitle }}</span>
+            </div>
+
+            <a-list :data-source="visibleSelections" :split="false" class="selection-list">
                 <template #renderItem="{ item }">
-                    <a-list-item>
-                        <div class="selection-item">
-                            <a-avatar :size="56" class="user-avatar">{{ item.user_id.slice(0, 1) }}</a-avatar>
-                            <div class="selection-main">
-                                <div class="selection-meta">
-                                    <div class="user-main-line">
-                                        <span class="user-name">{{ item.user_id }}</span>
-                                        <a-rate :value="item.rate" disabled allow-half class="inline-rate" />
-                                        <span class="reply-rate-number">{{ item.rate }}</span>
+                    <a-list-item class="selection-list-item">
+                        <a-comment class="selection-comment">
+                            <template #avatar>
+                                <a-avatar :size="52" class="user-avatar">{{ getUserInitial(item.user_id) }}</a-avatar>
+                            </template>
+
+                            <template #author>
+                                <div class="comment-author-row">
+                                    <span class="user-name">{{ item.user_id }}</span>
+                                    <a-rate :value="item.rate" disabled allow-half class="inline-rate" />
+                                    <span class="reply-rate-number">{{ item.rate }}</span>
+                                </div>
+                            </template>
+
+                            <template #datetime>
+                                <span class="meta-date">{{ item.date }}</span>
+                            </template>
+
+                            <template #content>
+                                <div class="selection-main">
+                                    <div class="selection-comment-box">{{ item.comment }}</div>
+
+                                    <div class="selection-extra">
+                                        <a-tag color="gold" class="selection-tag">
+                                            {{ text.pricePrefix }}{{ item.price }}{{ text.priceSuffix }}
+                                        </a-tag>
+                                        <a-tag
+                                            v-for="(pos, index) in item.position"
+                                            :key="`${item.id}-${index}`"
+                                            color="blue"
+                                            class="selection-tag"
+                                        >
+                                            {{ formatPosition(pos) }}
+                                        </a-tag>
                                     </div>
-                                    <span class="meta-date">{{ item.date }}</span>
                                 </div>
+                            </template>
 
-                                <div class="selection-comment-box">{{ item.comment }}</div>
-
-                                <div class="selection-extra">
-                                    <div>{{ text.pricePrefix }}{{ item.price }}{{ text.priceSuffix }}</div>
-                                    <div v-for="(pos, index) in item.position" :key="`${item.id}-${index}`">
-                                        {{ text.purchasePrefix }}{{ pos.floor }}{{ text.floor }}({{ pos.window }}{{ text.window }})
-                                    </div>
-                                </div>
-
-                                <div class="reply-row">
-                                    <a-button type="link" size="small" class="action-btn">{{ text.reply }}</a-button>
-                                    <a-button type="link" size="small" class="action-btn" @click="openRatingModal(item)">
-                                        {{ text.rateAction }}
-                                    </a-button>
-                                </div>
-                            </div>
-                        </div>
+                            <template #actions>
+                                <span class="comment-action">{{ text.reply }}</span>
+                                <span class="comment-action" @click="openRatingModal(item)">{{ text.rateAction }}</span>
+                            </template>
+                        </a-comment>
                     </a-list-item>
                 </template>
             </a-list>
@@ -48,38 +65,79 @@
         </div>
 
         <div id="rank-show" class="contribute-section">
-            <span class="dish-show-title">{{ text.contributeTitle }}</span>
-
-            <div class="form-section">
-                <a-textarea v-model:value="form.comment" :rows="5" :placeholder="text.commentPlaceholder" />
+            <div class="panel-header">
+                <span class="dish-show-title">{{ text.contributeTitle }}</span>
+                <span class="panel-subtitle">{{ text.contributeSubtitle }}</span>
             </div>
 
-            <div class="form-section">
-                <a-input-number
-                    v-model:value="form.price"
-                    :min="0"
-                    :step="0.5"
-                    :precision="1"
-                    style="width: 240px"
-                    :placeholder="text.pricePlaceholder"
-                />
-            </div>
+            <div class="form-shell">
+                <div class="form-section">
+                    <div class="section-title">{{ text.commentTitle }}</div>
+                    <a-textarea v-model:value="form.comment" :rows="5" :placeholder="text.commentPlaceholder" />
+                </div>
 
-            <div class="form-section">
-                <div class="section-title">{{ text.selectPosition }}</div>
-                <div class="position-rows">
-                    <div v-for="(item, index) in form.positions" :key="index" class="position-row">
-                        <a-space>
-                            <a-select v-model:value="item.floor" :options="floorOptions" :placeholder="text.floorPlaceholder" style="width: 120px" />
-                            <a-select v-model:value="item.window" :options="windowOptions" :placeholder="text.windowPlaceholder" style="width: 120px" />
-                        </a-space>
-                        <a-button v-if="index === form.positions.length - 1" type="dashed" shape="circle" size="small" @click="addPositionRow">+</a-button>
-                        <a-button v-if="index === form.positions.length - 1 && form.positions.length >= 2" type="dashed" shape="circle" size="small" @click="removePositionRow">-</a-button>
+                <div class="form-grid">
+                    <div class="form-section">
+                        <div class="section-title">{{ text.priceTitle }}</div>
+                        <a-input-number
+                            v-model:value="form.price"
+                            :min="0"
+                            :step="0.5"
+                            :precision="1"
+                            class="price-input"
+                            :placeholder="text.pricePlaceholder"
+                        >
+                            <template #addonAfter>{{ text.yuanSymbol }}</template>
+                        </a-input-number>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-title">{{ text.selectPosition }}</div>
+                        <div class="position-rows">
+                            <div v-for="(item, index) in form.positions" :key="index" class="position-row">
+                                <a-space wrap>
+                                    <a-select
+                                        v-model:value="item.floor"
+                                        :options="floorOptions"
+                                        :placeholder="text.floorPlaceholder"
+                                        style="width: 120px"
+                                    />
+                                    <a-select
+                                        v-model:value="item.window"
+                                        :options="windowOptions"
+                                        :placeholder="text.windowPlaceholder"
+                                        style="width: 120px"
+                                    />
+                                </a-space>
+                                <div class="position-actions">
+                                    <a-button
+                                        v-if="index === form.positions.length - 1"
+                                        type="dashed"
+                                        shape="circle"
+                                        size="small"
+                                        @click="addPositionRow"
+                                    >
+                                        +
+                                    </a-button>
+                                    <a-button
+                                        v-if="index === form.positions.length - 1 && form.positions.length >= 2"
+                                        type="dashed"
+                                        shape="circle"
+                                        size="small"
+                                        @click="removePositionRow"
+                                    >
+                                        -
+                                    </a-button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <a-button type="primary" @click="submitSelection">{{ text.submit }}</a-button>
+                <div class="submit-row">
+                    <a-button type="primary" size="large" @click="submitSelection">{{ text.submit }}</a-button>
+                </div>
+            </div>
         </div>
 
         <RatingModal
@@ -101,70 +159,62 @@ import Selection from '@/models/Selection';
 import Position from '@/models/Position';
 import RatingModal from '@/components/RatingModal.vue';
 import { buildFloorOptions, buildWindowOptions, createMockSelections } from '@/data/mockData';
+import { selectionListText, sharedText } from '@/models/text';
 
+// 页面内统一使用的文案，供列表、表单和评分弹窗复用。
 const text = {
-    pageTitle: '\u8001\u5403\u5bb6\u4e25\u9009',
-    contributeTitle: '\u6211\u8981\u5206\u4eab',
-    loadMore: '\u663e\u793a\u66f4\u591a',
-    reply: '\u56de\u590d',
-    rateAction: '\u8bc4\u5206',
-    submit: '\u63d0\u4ea4',
-    submitRating: '\u63d0\u4ea4\u8bc4\u5206',
-    rateTitlePrefix: '\u5bf9',
-    rateTitleSuffix: '\u8fdb\u884c\u8bc4\u5206',
-    commentPlaceholder: '\u8bf7\u8f93\u5165\u8bc4\u8bba\u5185\u5bb9',
-    pricePlaceholder: '\u8bf7\u8f93\u5165\u4ef7\u683c',
-    selectPosition: '\u9009\u62e9\u4f4d\u7f6e',
-    floorPlaceholder: '\u9009\u62e9\u697c\u5c42',
-    windowPlaceholder: '\u9009\u62e9\u7a97\u53e3',
-    submitSuccess: '\u611f\u8c22\u4f60\u7684\u8d21\u732e\uff0c\u63d0\u4ea4\u540e\u7684\u6570\u636e\u4f1a\u5728\u5ba1\u6838\u540e\u663e\u793a',
-    floor: '\u697c',
-    window: '\u7a97\u53e3',
-    pricePrefix: '\u4ef7\u683c\uff1a',
-    priceSuffix: '\u5143',
-    purchasePrefix: '\u8d2d\u4e70\u4f4d\u7f6e',
+    ...sharedText,
+    ...selectionListText,
 };
 
-// Shared source for selection demo data.
+// 严选列表使用的本地示例数据源。
 const selections = ref(createMockSelections());
 
-// Display pagination config.
+// 列表分页显示配置。
 const pageSize = 5;
 const visibleCount = ref(pageSize);
 const visibleSelections = computed(() => selections.value.slice(0, visibleCount.value));
 const hasMore = computed(() => visibleCount.value < selections.value.length);
 
-// Position selectors.
+// 投稿表单中“购买位置”选择器的可选项。
 const floorOptions = buildFloorOptions(2, text.floor);
 const windowOptions = buildWindowOptions(8, text.window);
 
-// Contribution form state.
+// “我要分享”表单的本地状态。
 const form = ref({
     comment: '',
     price: null,
     positions: [{ floor: null, window: null }],
 });
 
-// Rating modal state.
+// 评论项触发的评分弹窗状态。
 const ratingModalVisible = ref(false);
 const ratingTargetName = ref('');
 const ratingValue = ref(0);
 const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingTargetName.value}${text.rateTitleSuffix}`);
 
+// 评论风格展示用到的小工具函数。
+const getUserInitial = (userId) => userId.slice(0, 1);
+const formatPosition = (pos) => `${text.purchasePrefix}${pos.floor}${text.floor}(${pos.window}${text.window})`;
+
+// 在本地示例数据中继续展开更多评论，不重新请求数据。
 const loadMore = () => {
     visibleCount.value = Math.min(visibleCount.value + pageSize, selections.value.length);
 };
 
+// 增加一行购买位置，支持一条分享对应多个窗口。
 const addPositionRow = () => {
     form.value.positions.push({ floor: null, window: null });
 };
 
+// 至少保留一行购买位置，避免表单为空。
 const removePositionRow = () => {
     if (form.value.positions.length > 1) {
         form.value.positions.pop();
     }
 };
 
+// 提交成功后重置分享表单。
 const resetForm = () => {
     form.value = {
         comment: '',
@@ -173,38 +223,42 @@ const resetForm = () => {
     };
 };
 
+// 为当前评论对象打开评分弹窗。
 const openRatingModal = (item) => {
     ratingTargetName.value = item.user_id;
     ratingValue.value = item.rate || 0;
     ratingModalVisible.value = true;
 };
 
+// 同步弹窗内星级评分组件的值。
 const updateRatingValue = (value) => {
     ratingValue.value = value;
 };
 
+// 关闭评分弹窗，不做持久化写回。
 const closeRatingModal = () => {
     ratingModalVisible.value = false;
 };
 
-// Keep the current behavior: close only, no write-back.
+// 保持当前行为：仅关闭弹窗，不回写数据。
 const submitRating = () => {
     ratingModalVisible.value = false;
 };
 
+// 校验表单并将新的分享内容插入到本地列表顶部。
 const submitSelection = () => {
     const cleanComment = form.value.comment.trim();
     const validPositions = form.value.positions.filter((p) => p.floor && p.window);
 
     if (!cleanComment || form.value.price === null || validPositions.length === 0) {
-        message.warning('\u8bf7\u5b8c\u6574\u586b\u5199\u8bc4\u8bba\u3001\u4ef7\u683c\u548c\u81f3\u5c11\u4e00\u4e2a\u8d2d\u4e70\u4f4d\u7f6e');
+        message.warning(text.submitWarning);
         return;
     }
 
     selections.value.unshift(
         new Selection(
             Date.now(),
-            '\u6211',
+            text.myUserName,
             new Date().toISOString().slice(0, 10),
             cleanComment,
             form.value.price,
@@ -236,9 +290,18 @@ const submitSelection = () => {
     margin-top: 20px;
 }
 
+.panel-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
 .dish-show-title {
     display: inline-block;
-    margin-bottom: 12px;
     font-family: 'Noto Serif SC', 'Microsoft YaHei', serif;
     font-weight: 800;
     font-size: 22px;
@@ -246,37 +309,62 @@ const submitSelection = () => {
     letter-spacing: 0.5px;
 }
 
-.selection-item {
-    width: 100%;
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
+.panel-subtitle {
+    color: #8c8c8c;
+    font-size: 13px;
+    white-space: nowrap;
 }
 
 .user-avatar {
     flex-shrink: 0;
-    background: #f5f5f5;
+    background: linear-gradient(135deg, #fff1f0 0%, #ffd6d6 100%);
     color: #cf1322;
-    border: 1px solid #ffa39e;
+    border: 1px solid #ffb3b3;
+    box-shadow: 0 8px 18px rgba(255, 77, 79, 0.16);
+}
+
+.selection-list-item {
+    padding: 18px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+:deep(.selection-comment) {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 14px 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+:deep(.selection-comment:hover) {
+    border-color: #d9d9d9;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.selection-comment .ant-comment-inner) {
+    padding: 0;
+}
+
+:deep(.selection-comment .ant-comment-content-author) {
+    margin-bottom: 10px;
+}
+
+:deep(.selection-comment .ant-comment-actions) {
+    margin-top: 12px;
 }
 
 .selection-main {
-    flex: 1;
     min-width: 0;
 }
 
-.selection-meta {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 18px;
-    margin-bottom: 8px;
-}
-
-.user-main-line {
+.comment-author-row {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .user-name {
@@ -297,30 +385,37 @@ const submitSelection = () => {
 }
 
 .selection-comment-box {
-    border: 1px solid #e6e6e6;
-    border-radius: 6px;
-    padding: 10px 12px;
-    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
     color: #1f1f1f;
     line-height: 1.8;
     white-space: pre-wrap;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .selection-extra {
-    margin-top: 8px;
-    color: #434343;
-    line-height: 1.8;
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.reply-row {
-    margin-top: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
+.selection-tag {
+    margin: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
 }
 
-.action-btn {
-    padding: 0;
+.comment-action {
+    color: #595959;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.comment-action:hover {
+    color: #1677ff;
 }
 
 .reply-rate-number {
@@ -347,6 +442,19 @@ const submitSelection = () => {
     justify-content: center;
 }
 
+.form-shell {
+    background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%);
+    border: 1px solid #f0f0f0;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 260px) 1fr;
+    gap: 18px;
+}
+
 .form-section {
     margin-bottom: 14px;
 }
@@ -355,17 +463,67 @@ const submitSelection = () => {
     margin-bottom: 8px;
     color: #1f1f1f;
     font-weight: 600;
+    font-size: 14px;
 }
 
 .position-rows {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .position-row {
     display: flex;
     align-items: center;
     gap: 8px;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.position-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.price-input {
+    width: 100%;
+}
+
+.submit-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .panel-subtitle {
+        white-space: normal;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .position-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .submit-row {
+        justify-content: stretch;
+    }
+
+    .submit-row :deep(.ant-btn) {
+        width: 100%;
+    }
 }
 </style>

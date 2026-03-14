@@ -11,13 +11,15 @@
 </template>
 
 <script>
+import { ratingModalText } from '@/models/text';
+
 export default {
     name: 'RatingModal',
     props: {
         open: { type: Boolean, default: false },
         title: { type: String, default: '' },
         ratingValue: { type: Number, default: 0 },
-        submitText: { type: String, default: '提交评分' },
+        submitText: { type: String, default: ratingModalText.submitText },
         tooltips: {
             type: Array,
             default: () => ['0.5', '1.0', '1.5', '2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'],
@@ -25,7 +27,7 @@ export default {
     },
     emits: ['cancel', 'submit', 'update:ratingValue'],
     computed: {
-        // Human-readable text beside stars, e.g. 4.5
+        // 星级右侧显示当前选中的分值。
         ratingDescText() {
             if (this.ratingValue <= 0) return '';
             const index = Math.round(this.ratingValue * 2) - 1;

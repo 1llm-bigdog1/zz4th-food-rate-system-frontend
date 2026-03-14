@@ -56,26 +56,17 @@
 import { computed, ref, watch } from 'vue';
 import { CrownFilled } from '@ant-design/icons-vue';
 import { createMockDishes } from '@/data/mockData';
+import { ratingDetailText, sharedText } from '@/models/text';
 
 const text = {
-    standardTitle: '\u6807\u51c6\u6392\u540d',
-    weightedTitle: '\u52a0\u6743\u6392\u540d',
-    rank: '\u6392\u540d',
-    name: '\u83dc\u54c1\u540d\u79f0',
-    position: '\u83dc\u54c1\u4f4d\u7f6e',
-    rate: '\u53e3\u5473\u8bc4\u5206',
-    price: '\u4ef7\u683c(\u5143)',
-    weightedScore: '\u7efc\u5408\u8bc4\u5206',
-    priceFocus: '\u4fa7\u91cd\u4ef7\u683c',
-    tasteFocus: '\u4fa7\u91cd\u53e3\u5473',
-    floor: '\u697c',
-    window: '\u53f7\u7a97\u53e3',
+    ...sharedText,
+    ...ratingDetailText,
 };
 
-// 复用统一菜品样例数据，保证列表/排行榜口径一致。
+// 复用统一菜品样例数据，保证列表和排行榜口径一致。
 const dishes = ref(createMockDishes());
 
-// alpha：口味权重（价格权重 = 1 - alpha）。
+// alpha 表示口味权重，价格权重等于 1 - alpha。
 const alpha = ref(0.5);
 watch(alpha, (val) => {
     if (val <= 0) alpha.value = 0.01;
@@ -89,24 +80,23 @@ const alphaMarks = {
 
 const standardColumns = [
     { title: text.rank, dataIndex: 'rank', key: 'rank', width: 90 },
-    { title: text.name, dataIndex: 'name', key: 'name' },
-    { title: text.position, dataIndex: 'position', key: 'position' },
+    { title: text.dishName, dataIndex: 'name', key: 'name' },
+    { title: text.dishPosition, dataIndex: 'position', key: 'position' },
     { title: text.rate, dataIndex: 'rate', key: 'rate' },
-    { title: text.price, dataIndex: 'price', key: 'price' },
+    { title: text.priceWithUnit, dataIndex: 'price', key: 'price' },
 ];
 
 const weightedColumns = [
     { title: text.rank, dataIndex: 'rank', key: 'rank', width: 90 },
-    { title: text.name, dataIndex: 'name', key: 'name' },
-    { title: text.position, dataIndex: 'position', key: 'position' },
+    { title: text.dishName, dataIndex: 'name', key: 'name' },
+    { title: text.dishPosition, dataIndex: 'position', key: 'position' },
     { title: text.rate, dataIndex: 'rate', key: 'rate' },
-    { title: text.price, dataIndex: 'price', key: 'price' },
+    { title: text.priceWithUnit, dataIndex: 'price', key: 'price' },
     { title: text.weightedScore, dataIndex: 'weightedScore', key: 'weightedScore' },
 ];
 
 const maxPrice = computed(() => Math.max(...dishes.value.map((d) => d.price)));
 const minPrice = computed(() => Math.min(...dishes.value.map((d) => d.price)));
-
 const getPositionText = (dish) => `${dish.position.stair}${text.floor}${dish.position.window}${text.window}`;
 
 const standardRankData = computed(() =>

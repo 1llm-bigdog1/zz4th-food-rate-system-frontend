@@ -27,6 +27,8 @@
 </template>
 
 <script>
+import { supplementInfoModalText } from '@/models/text';
+
 export default {
     name: 'SupplementInfoModal',
     props: {
@@ -35,19 +37,19 @@ export default {
         form: { type: Object, required: true },
         floorOptions: { type: Array, default: () => [] },
         windowOptions: { type: Array, default: () => [] },
-        uploadImageText: { type: String, default: '上传图片' },
-        uploadBtnText: { type: String, default: '点击上传' },
-        modifyPositionText: { type: String, default: '位置修改' },
-        modifyPriceText: { type: String, default: '价格' },
-        floorPlaceholder: { type: String, default: '选择楼层' },
-        windowPlaceholder: { type: String, default: '选择窗口' },
-        pricePlaceholder: { type: String, default: '请输入价格' },
-        submitText: { type: String, default: '提交修改' },
+        uploadImageText: { type: String, default: supplementInfoModalText.uploadImageText },
+        uploadBtnText: { type: String, default: supplementInfoModalText.uploadBtnText },
+        modifyPositionText: { type: String, default: supplementInfoModalText.modifyPositionText },
+        modifyPriceText: { type: String, default: supplementInfoModalText.modifyPriceText },
+        floorPlaceholder: { type: String, default: supplementInfoModalText.floorPlaceholder },
+        windowPlaceholder: { type: String, default: supplementInfoModalText.windowPlaceholder },
+        pricePlaceholder: { type: String, default: supplementInfoModalText.pricePlaceholder },
+        submitText: { type: String, default: supplementInfoModalText.submitText },
     },
     emits: ['cancel', 'submit'],
     data() {
         return {
-            // Local editable copy to avoid mutating parent prop directly.
+            // 使用本地副本，避免直接修改父组件传入的 props。
             localForm: this.normalizeForm(this.form),
         };
     },

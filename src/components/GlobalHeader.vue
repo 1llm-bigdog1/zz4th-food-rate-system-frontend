@@ -7,7 +7,7 @@
             </router-link>
 
             <a-menu v-model:selectedKeys="current" mode="horizontal" class="header-menu">
-                <!-- 菜单项配置驱动，避免重复模板 -->
+                <!-- 菜单项使用配置驱动，避免重复模板 -->
                 <a-menu-item v-for="item in menuItems" :key="item.key">
                     <template #icon>
                         <component :is="item.icon" />
@@ -39,19 +39,9 @@ import {
     UserOutlined,
 } from '@ant-design/icons-vue';
 import badgeLogo from '@/static/badge.png';
+import { globalHeaderText as text } from '@/models/text';
 
 const current = ref(['dishOverview']);
-
-const text = {
-    brandTitle: '郑州市第四高级中学菜品评分系统',
-    dishOverview: '菜品总览',
-    rating: '我要评分',
-    rank: '评分排行榜',
-    selection: '老吃家严选',
-    newSuggestion: '新品建议',
-    canteenFeedback: '食堂意见',
-    dishManage: '菜品管理',
-};
 
 const menuItems = [
     { key: 'dishOverview', label: text.dishOverview, icon: AppstoreOutlined, to: '/dishes' },

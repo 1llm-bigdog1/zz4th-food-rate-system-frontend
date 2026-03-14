@@ -14,18 +14,18 @@
             <!-- 全站页脚 -->
             <a-layout-footer class="footer">
                 <div class="footer-inner">
-                    <div class="footer-side">郑州市第四高级中学</div>
+                    <div class="footer-side">{{ text.schoolName }}</div>
                     <div class="footer-center">
-                        <p>&copy; 2026 郑州市第四高级中学菜品评分系统</p>
+                        <p>&copy; 2026 {{ text.systemName }}</p>
                         <div class="footer-links">
-                            <a href="#">隐私政策</a>
-                            <a href="#">服务条款</a>
-                            <a href="#">联系我们</a>
+                            <a href="#">{{ text.privacyPolicy }}</a>
+                            <a href="#">{{ text.termsOfService }}</a>
+                            <a href="#">{{ text.contactUs }}</a>
                         </div>
                     </div>
                     <div class="footer-side">
-                        <p>此系统非学校官方开发</p>
-                        <p>由学生开发，仅供参考</p>
+                        <p>{{ text.disclaimerLine1 }}</p>
+                        <p>{{ text.disclaimerLine2 }}</p>
                     </div>
                 </div>
             </a-layout-footer>
@@ -34,7 +34,7 @@
         <!-- 回到顶部按钮 -->
         <div id="components-back-top-demo-custom">
             <a-back-top>
-                <div class="ant-back-top-inner">UP</div>
+                <div class="ant-back-top-inner">{{ text.backToTop }}</div>
             </a-back-top>
         </div>
     </div>
@@ -42,11 +42,17 @@
 
 <script>
 import GlobalHeader from '@/components/GlobalHeader.vue';
+import { basicLayoutText as text } from '@/models/text';
 
 export default {
     name: 'BasicLayout',
     components: {
         GlobalHeader,
+    },
+    data() {
+        return {
+            text,
+        };
     },
 };
 </script>

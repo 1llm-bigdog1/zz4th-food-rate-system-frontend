@@ -2,7 +2,7 @@
     <div id="home-page">
         <div id="dish-show">
             <div class="dish-show-header">
-                <span class="dish-show-title">菜品总览</span>
+                <span class="dish-show-title">{{ text.overviewTitle }}</span>
             </div>
             <div class="dish-show-divider"></div>
 
@@ -14,9 +14,9 @@
                                 <img :alt="dish.name" :src="dish.image" />
                             </template>
                             <template #actions>
-                                <a-button type="text" class="detail-btn">查看详情</a-button>
+                                <a-button type="text" class="detail-btn">{{ text.detail }}</a-button>
                             </template>
-                            <a-card-meta :title="dish.name" :description="`${dish.position.stair}楼${dish.position.window}号窗口`" />
+                            <a-card-meta :title="dish.name" :description="formatPosition(dish.position)" />
                             <span>
                                 <a-rate :value="dish.rate" :tooltips="rateTips" disabled allow-half />
                                 <span class="ant-rate-text">{{ dish.rate }}</span>
@@ -28,13 +28,13 @@
 
             <a-row id="want-more" justify="center">
                 <a-col :flex="'0 0 auto'" class="see-more-col">
-                    <a-button type="default" size="large" class="see-more-button">查看更多菜品</a-button>
+                    <a-button type="default" size="large" class="see-more-button">{{ text.moreDishes }}</a-button>
                 </a-col>
             </a-row>
         </div>
 
         <div id="rank-show">
-            <span class="dish-show-title">每日排名</span>
+            <span class="dish-show-title">{{ text.dailyRank }}</span>
             <a-table :columns="columns" :data-source="rankData" :row-key="(record) => record.id" :pagination="false">
                 <template #bodyCell="{ column, record }">
                     <template v-if="column.key === 'rank'">
@@ -53,7 +53,7 @@
             </a-table>
             <a-row id="rank-more" justify="center">
                 <a-col :flex="'0 0 auto'" class="see-more-col">
-                    <a-button type="default" size="large" class="see-more-button">查看更多</a-button>
+                    <a-button type="default" size="large" class="see-more-button">{{ text.more }}</a-button>
                 </a-col>
             </a-row>
         </div>
@@ -64,19 +64,21 @@
 import { computed, ref } from 'vue';
 import { CrownFilled } from '@ant-design/icons-vue';
 import { createMockDishes } from '@/data/mockData';
+import { homePageText as text, sharedText } from '@/models/text';
 
 // 首页只展示前 8 个卡片，排名则基于完整样例数据。
 const dishes = ref(createMockDishes());
 const previewDishes = computed(() => dishes.value.slice(0, 8));
 
 const rateTips = ['1', '2', '3', '4', '5'];
+const formatPosition = (position) => `${position.stair}${sharedText.floor}${position.window}${sharedText.window}`;
 
 const columns = [
-    { title: '排名', dataIndex: 'rank', key: 'rank', width: 90 },
-    { title: '菜品名称', dataIndex: 'name', key: 'name' },
-    { title: '菜品位置', dataIndex: 'position', key: 'position' },
-    { title: '评分', dataIndex: 'rate', key: 'rate' },
-    { title: '价格(元)', dataIndex: 'price', key: 'price' },
+    { title: sharedText.rank, dataIndex: 'rank', key: 'rank', width: 90 },
+    { title: sharedText.dishName, dataIndex: 'name', key: 'name' },
+    { title: sharedText.dishPosition, dataIndex: 'position', key: 'position' },
+    { title: sharedText.rate, dataIndex: 'rate', key: 'rate' },
+    { title: sharedText.priceWithUnit, dataIndex: 'price', key: 'price' },
 ];
 
 // 排行按评分从高到低。
@@ -87,7 +89,7 @@ const rankData = computed(() =>
             id: dish.id,
             rank: index + 1,
             name: dish.name,
-            position: `${dish.position.stair}楼${dish.position.window}号窗口`,
+            position: formatPosition(dish.position),
             rate: dish.rate,
             price: dish.price,
         })),
