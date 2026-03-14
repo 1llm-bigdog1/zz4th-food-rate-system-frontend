@@ -4,7 +4,7 @@
  * @property {number} rate 评分（用于展示，不在提交弹窗中回写）
  */
 export default class Selection {
-    constructor(id, user_id, date, comment, price = 0, position = [], rate = 0) {
+    constructor(id, user_id, date, comment, price = 0, position = [], rate = 0, follow_comments=[]) {
         this.id = id;
         this.user_id = user_id;
         this.date = date;
@@ -12,5 +12,7 @@ export default class Selection {
         this.price = price;
         this.position = position;
         this.rate = rate;
+        this.follow_comments = follow_comments;
     }
 }
+

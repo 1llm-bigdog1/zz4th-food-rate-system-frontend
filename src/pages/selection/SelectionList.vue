@@ -9,7 +9,7 @@
             <a-list :data-source="visibleSelections" :split="false" class="selection-list">
                 <template #renderItem="{ item }">
                     <a-list-item class="selection-list-item">
-                        <a-comment class="selection-comment">
+                        <a-comment class="selection-comment selection-comment-link" @click="goToSelectionDetail(item)">
                             <template #avatar>
                                 <a-avatar :size="52" class="user-avatar">{{ getUserInitial(item.user_id) }}</a-avatar>
                             </template>
@@ -47,8 +47,8 @@
                             </template>
 
                             <template #actions>
-                                <span class="comment-action">{{ text.reply }}</span>
-                                <span class="comment-action" @click="openRatingModal(item)">{{ text.rateAction }}</span>
+                                <span class="comment-action" @click.stop="goToSelectionDetail(item)">{{ text.reply }}</span>
+                                <span class="comment-action" @click.stop="openRatingModal(item)">{{ text.rateAction }}</span>
                             </template>
                         </a-comment>
                     </a-list-item>
@@ -155,11 +155,14 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { message } from 'ant-design-vue';
+import { useRouter } from 'vue-router';
 import Selection from '@/models/Selection';
 import Position from '@/models/Position';
 import RatingModal from '@/components/RatingModal.vue';
 import { buildFloorOptions, buildWindowOptions, createMockSelections } from '@/data/mockData';
 import { selectionListText, sharedText } from '@/models/text';
+
+const router = useRouter();
 
 // 页面内统一使用的文案，供列表、表单和评分弹窗复用。
 const text = {
@@ -196,6 +199,9 @@ const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingTargetNa
 // 评论风格展示用到的小工具函数。
 const getUserInitial = (userId) => userId.slice(0, 1);
 const formatPosition = (pos) => `${text.purchasePrefix}${pos.floor}${text.floor}(${pos.window}${text.window})`;
+const goToSelectionDetail = (item) => {
+    router.push(`/selection-detail/${item.id}`);
+};
 
 // 在本地示例数据中继续展开更多评论，不重新请求数据。
 const loadMore = () => {
@@ -336,6 +342,10 @@ const submitSelection = () => {
     border-radius: 16px;
     padding: 14px 16px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.selection-comment-link {
+    cursor: pointer;
 }
 
 :deep(.selection-comment:hover) {

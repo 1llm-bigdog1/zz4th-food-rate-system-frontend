@@ -48,8 +48,8 @@ const menuItems = [
     { key: 'rating', label: text.rating, icon: StarOutlined, to: null },
     { key: 'rank', label: text.rank, icon: TrophyOutlined, to: '/rating-detail' },
     { key: 'selection', label: text.selection, icon: CrownOutlined, to: '/selectionlist' },
-    { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: null },
-    { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: null },
+    { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: '/advice-list' },
+    { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: '/suggestion-list' },
     { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: null },
 ];
 </script>
