@@ -1,3 +1,9 @@
+/**
+ * 文件说明：mockData.js
+ * 1. 这个脚本负责提供示例数据、构造方法或演示环境所需的数据源。
+ * 2. 该文件位于 src\data 目录下，是当前模块的重要基础脚本之一。
+ * 3. 维护这类文件时，应优先关注它和其它模块之间的依赖关系，避免改动牵连过大。
+ */
 import Dish from '@/models/Dish';
 import Position from '@/models/Position';
 import Advice from '@/models/Advice';
