@@ -11,6 +11,7 @@ import Selection from '@/models/Selection';
 import Position from '@/models/Position';
 import { buildFloorOptions, buildWindowOptions, createMockSelections } from '@/data/mockData';
 import { selectionListText, sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 // 严选列表页相对复杂，包含分享表单和评分弹窗。
 // 这里把业务状态全部抽离，保证双端行为完全一致。
@@ -89,7 +90,7 @@ export const useSelectionListPage = () => {
         ratingModalVisible.value = false;
     };
 
-    const submitSelection = () => {
+    const submitSelection = async () => {
         const cleanComment = form.value.comment.trim();
         const validPositions = form.value.positions.filter((item) => item.floor && item.window);
 
@@ -98,17 +99,26 @@ export const useSelectionListPage = () => {
             return;
         }
 
-        selections.value.unshift(
-            new Selection(
-                Date.now(),
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                form.value.price,
-                validPositions.map((item) => new Position(item.floor, item.window)),
-                5,
-            ),
+        const reviewResult = await submitContentForReview({
+            type: 'selection',
+            comment: cleanComment,
+            price: form.value.price,
+            positions: validPositions,
+        });
+
+        if (reviewResult.approved) {
+            selections.value.unshift(
+                new Selection(
+                    Date.now(),
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    form.value.price,
+                    validPositions.map((item) => new Position(item.floor, item.window)),
+                    5,
+                ),
         );
+        }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);
         resetForm();

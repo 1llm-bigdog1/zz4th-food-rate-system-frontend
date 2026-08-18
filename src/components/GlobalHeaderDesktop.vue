@@ -39,7 +39,6 @@ import {
     CrownOutlined,
     MessageOutlined,
     SettingOutlined,
-    StarOutlined,
     TrophyOutlined,
     UserOutlined,
 } from '@ant-design/icons-vue';
@@ -50,12 +49,11 @@ const current = ref(['dishOverview']);
 
 const menuItems = [
     { key: 'dishOverview', label: text.dishOverview, icon: AppstoreOutlined, to: '/dishes' },
-    { key: 'rating', label: text.rating, icon: StarOutlined, to: null },
     { key: 'rank', label: text.rank, icon: TrophyOutlined, to: '/rating-detail' },
     { key: 'selection', label: text.selection, icon: CrownOutlined, to: '/selectionlist' },
     { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: '/advice-list' },
     { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: '/suggestion-list' },
-    { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: '/dishes-management' },
+    { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: '/admin' },
 ];
 </script>
 

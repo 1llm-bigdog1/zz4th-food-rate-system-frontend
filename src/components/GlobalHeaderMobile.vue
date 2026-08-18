@@ -51,7 +51,6 @@ import {
     MenuOutlined,
     MessageOutlined,
     SettingOutlined,
-    StarOutlined,
     TrophyOutlined,
 } from '@ant-design/icons-vue';
 import badgeLogo from '@/static/badge.png';
@@ -66,12 +65,11 @@ const text = {
 
 const menuItems = [
     { key: 'dishOverview', label: text.dishOverview, icon: AppstoreOutlined, to: '/dishes' },
-    { key: 'rating', label: text.rating, icon: StarOutlined, to: null },
     { key: 'rank', label: text.rank, icon: TrophyOutlined, to: '/rating-detail' },
     { key: 'selection', label: text.selection, icon: CrownOutlined, to: '/selectionlist' },
     { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: '/advice-list' },
     { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: '/suggestion-list' },
-    { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: '/dishes-management' },
+    { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: '/admin' },
 ];
 </script>
 

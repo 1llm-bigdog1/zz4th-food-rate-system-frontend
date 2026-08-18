@@ -18,6 +18,7 @@ import SelectionDetail from '../pages/selection/SelectionDetail.vue';
 import SuggestionList from '../pages/suggestions/SuggestionList.vue';
 import SuggestionDetail from '../pages/suggestions/SuggestionDetail.vue';
 import DishesManagement from '../pages/management/DishesManagement.vue';
+import AdminChannel from '../pages/management/AdminChannel.vue';
 
 // 路由表：按页面模块分组，便于后续拆分子路由。
 const routes = [
@@ -85,6 +86,11 @@ const routes = [
     path: '/dishes-management',
     name: 'DishesManagement',
     component: DishesManagement
+  },
+  {
+    path: '/admin',
+    name: 'AdminChannel',
+    component: AdminChannel
   }
 ];
 

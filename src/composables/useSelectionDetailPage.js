@@ -10,6 +10,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { createMockSelectionComments, createMockSelections } from '@/data/mockData';
 import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 // 严选详情页包含回复树和针对主贴/评论的评分状态。
 export const useSelectionDetailPage = () => {
@@ -110,7 +111,7 @@ export const useSelectionDetailPage = () => {
         message.success(text.submitRating);
     };
 
-    const submitReply = () => {
+    const submitReply = async () => {
         const cleanReply = replyContent.value.trim();
 
         if (!cleanReply) {
@@ -118,21 +119,30 @@ export const useSelectionDetailPage = () => {
             return;
         }
 
-        comments.value.push(
-            new SelectionComment(
-                `${currentSelection.value.id}-comment-${Date.now()}`,
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanReply,
-                currentSelection.value.id,
-                activeReplyTarget.value.type === 'comment'
-                    ? {
-                        'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
-                        'comment-id': activeReplyTarget.value.id,
-                    }
-                    : null,
-            ),
-        );
+        const reviewResult = await submitContentForReview({
+            type: 'selection-comment',
+            selectionId: currentSelection.value.id,
+            reply: cleanReply,
+            target: activeReplyTarget.value,
+        });
+
+        if (reviewResult.approved) {
+            comments.value.push(
+                new SelectionComment(
+                    `${currentSelection.value.id}-comment-${Date.now()}`,
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanReply,
+                    currentSelection.value.id,
+                    activeReplyTarget.value.type === 'comment'
+                        ? {
+                            'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
+                            'comment-id': activeReplyTarget.value.id,
+                        }
+                        : null,
+                ),
+            );
+        }
 
         cancelReply();
         message.success(text.submitSuccess);

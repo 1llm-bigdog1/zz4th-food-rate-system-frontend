@@ -9,6 +9,7 @@ import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { createMockSuggestionComments, createMockSuggestions } from '@/data/mockData';
 import SuggestionComment from '@/models/SuggestionComment';
+import { submitContentForReview } from '@/api/review';
 
 // 食堂建议详情页与新品建议详情页结构一致，但数据源不同。
 export const useSuggestionDetailPage = () => {
@@ -94,7 +95,7 @@ export const useSuggestionDetailPage = () => {
         if (target) target.likes += 1;
     };
 
-    const submitReply = () => {
+    const submitReply = async () => {
         const cleanReply = replyContent.value.trim();
 
         if (!cleanReply) {
@@ -102,17 +103,26 @@ export const useSuggestionDetailPage = () => {
             return;
         }
 
-        comments.value.push(
-            new SuggestionComment(
-                `${currentSuggestion.value.id}-comment-${Date.now()}`,
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                currentSuggestion.value.id,
-                cleanReply,
-                activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
-                0,
-            ),
-        );
+        const reviewResult = await submitContentForReview({
+            type: 'suggestion-comment',
+            suggestionId: currentSuggestion.value.id,
+            reply: cleanReply,
+            target: activeReplyTarget.value,
+        });
+
+        if (reviewResult.approved) {
+            comments.value.push(
+                new SuggestionComment(
+                    `${currentSuggestion.value.id}-comment-${Date.now()}`,
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    currentSuggestion.value.id,
+                    cleanReply,
+                    activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
+                    0,
+                ),
+            );
+        }
 
         cancelReply();
         message.success(text.submitSuccess);

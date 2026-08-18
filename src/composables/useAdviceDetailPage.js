@@ -9,6 +9,7 @@ import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { createMockAdviceComments, createMockAdvices } from '@/data/mockData';
 import AdviceComment from '@/models/AdviceComment';
+import { submitContentForReview } from '@/api/review';
 
 // 建议详情页的回复树、分页和点赞逻辑由桌面/移动端共享。
 export const useAdviceDetailPage = () => {
@@ -94,7 +95,7 @@ export const useAdviceDetailPage = () => {
         if (target) target.likes += 1;
     };
 
-    const submitReply = () => {
+    const submitReply = async () => {
         const cleanReply = replyContent.value.trim();
 
         if (!cleanReply) {
@@ -102,17 +103,26 @@ export const useAdviceDetailPage = () => {
             return;
         }
 
-        comments.value.push(
-            new AdviceComment(
-                `${currentAdvice.value.id}-comment-${Date.now()}`,
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                currentAdvice.value.id,
-                cleanReply,
-                activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
-                0,
-            ),
-        );
+        const reviewResult = await submitContentForReview({
+            type: 'advice-comment',
+            adviceId: currentAdvice.value.id,
+            reply: cleanReply,
+            target: activeReplyTarget.value,
+        });
+
+        if (reviewResult.approved) {
+            comments.value.push(
+                new AdviceComment(
+                    `${currentAdvice.value.id}-comment-${Date.now()}`,
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    currentAdvice.value.id,
+                    cleanReply,
+                    activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
+                    0,
+                ),
+            );
+        }
 
         cancelReply();
         message.success(text.submitSuccess);

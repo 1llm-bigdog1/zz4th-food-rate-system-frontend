@@ -8,6 +8,7 @@ import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { buildFloorOptions, buildWindowOptions, createMockDishes } from '@/data/mockData';
 import { dishesListText, sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 export const useDishesListPage = () => {
     const text = {
@@ -148,8 +149,13 @@ export const useDishesListPage = () => {
         editModalVisible.value = false;
     };
 
-    const submitModify = (nextForm) => {
+    const submitModify = async (nextForm) => {
         if (nextForm) {
+            await submitContentForReview({
+                type: 'dish-supplement',
+                dishName: editDishName.value,
+                ...nextForm,
+            });
             editForm.value = nextForm;
         }
         editModalVisible.value = false;

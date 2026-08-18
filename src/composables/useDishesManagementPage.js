@@ -10,6 +10,7 @@ import Dish from '@/models/Dish';
 import noImage from '@/static/no_image.png';
 import { buildFloorOptions, buildWindowOptions, createMockDishes } from '@/data/mockData';
 import { dishesListText, sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 export const useDishesManagementPage = () => {
     const text = {
@@ -155,11 +156,17 @@ export const useDishesManagementPage = () => {
         return firstFile.thumbUrl || firstFile.url || fallback;
     };
 
-    const submitModify = (nextForm) => {
+    const submitModify = async (nextForm) => {
         if (editDishId.value === null || !nextForm) {
             editModalVisible.value = false;
             return;
         }
+        await submitContentForReview({
+            type: 'dish-management-modify',
+            dishId: editDishId.value,
+            dishName: editDishName.value,
+            ...nextForm,
+        });
         const targetDish = dishes.value.find((item) => item.id === editDishId.value);
         if (targetDish) {
             targetDish.position = {

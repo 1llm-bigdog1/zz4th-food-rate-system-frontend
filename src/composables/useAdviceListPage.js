@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import Advice from '@/models/Advice';
 import { createMockAdvices } from '@/data/mockData';
 import { sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 // 新品建议列表页的所有业务状态都集中在这里，
 // 桌面端和移动端只负责展示，不复制提交和跳转逻辑。
@@ -56,7 +57,7 @@ export const useAdviceListPage = () => {
         item.like += 1;
     };
 
-    const submitAdvice = () => {
+    const submitAdvice = async () => {
         const cleanComment = form.value.comment.trim();
 
         if (!cleanComment) {
@@ -64,16 +65,20 @@ export const useAdviceListPage = () => {
             return;
         }
 
-        advices.value.unshift(
-            new Advice(
-                Date.now(),
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                0,
-                [],
-            ),
-        );
+        const reviewResult = await submitContentForReview({ type: 'advice', comment: cleanComment });
+
+        if (reviewResult.approved) {
+            advices.value.unshift(
+                new Advice(
+                    Date.now(),
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    0,
+                    [],
+                ),
+            );
+        }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);
         form.value.comment = '';

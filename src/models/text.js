@@ -41,13 +41,13 @@ export const basicLayoutText = {
 
 export const globalHeaderText = {
     brandTitle: '\u90d1\u5dde\u5e02\u7b2c\u56db\u9ad8\u7ea7\u4e2d\u5b66\u83dc\u54c1\u8bc4\u5206\u7cfb\u7edf',
-    dishOverview: '\u83dc\u54c1\u603b\u89c8',
+    dishOverview: '\u83dc\u54c1\u8bc4\u5206',
     rating: '\u6211\u8981\u8bc4\u5206',
     rank: '\u8bc4\u5206\u6392\u884c\u699c',
     selection: '\u8001\u5403\u5bb6\u4e25\u9009',
     newSuggestion: '\u65b0\u54c1\u5efa\u8bae',
     canteenFeedback: '\u98df\u5802\u610f\u89c1',
-    dishManage: '\u83dc\u54c1\u7ba1\u7406',
+    dishManage: '\u7ba1\u7406\u5458\u901a\u9053',
 };
 
 export const homePageText = {
@@ -59,7 +59,7 @@ export const homePageText = {
 };
 
 export const dishesListText = {
-    pageTitle: '\u83dc\u54c1\u5217\u8868',
+    pageTitle: '\u83dc\u54c1\u8bc4\u5206',
     addData: '\u8865\u5145\u4fe1\u606f',
     rateNow: '\u6211\u8981\u8bc4\u5206',
     rateTitlePrefix: '\u5bf9',

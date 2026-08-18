@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import Suggestion from '@/models/Suggestion';
 import { createMockSuggestions } from '@/data/mockData';
 import { sharedText } from '@/models/text';
+import { submitContentForReview } from '@/api/review';
 
 // 食堂建议列表页的桌面端和移动端共享逻辑。
 export const useSuggestionListPage = () => {
@@ -55,7 +56,7 @@ export const useSuggestionListPage = () => {
         item.like += 1;
     };
 
-    const submitSuggestion = () => {
+    const submitSuggestion = async () => {
         const cleanComment = form.value.comment.trim();
 
         if (!cleanComment) {
@@ -63,16 +64,20 @@ export const useSuggestionListPage = () => {
             return;
         }
 
-        suggestions.value.unshift(
-            new Suggestion(
-                Date.now(),
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                0,
-                [],
-            ),
-        );
+        const reviewResult = await submitContentForReview({ type: 'suggestion', comment: cleanComment });
+
+        if (reviewResult.approved) {
+            suggestions.value.unshift(
+                new Suggestion(
+                    Date.now(),
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    0,
+                    [],
+                ),
+            );
+        }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);
         form.value.comment = '';
