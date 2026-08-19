@@ -159,3 +159,110 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
   "reviewId": "selection-comment-123"
 }
 ```
+
+### 菜单增量同步
+
+菜单增量同步：前端从 IndexedDB 读取本地菜单与 `sync_version`，请求后端同步，并把同步结果写回本地菜单。
+
+#### 前端 → 后端
+
+- 请求方式：`GET`
+- 请求路径：`/menu/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `sync_version`；无本地菜单或无 `sync_version` 时不携带 |
+
+- 请求时机：调用 `getMenu()` 时发起同步；有 `sync_version` 时携带 `since=sync_version`，无本地菜单或无 `sync_version` 时不带 `since`，执行 Full Sync。
+- 后端响应格式（`application/json`）：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync | incremental",
+  "version": 123
+}
+```
+
+- 增量同步与 Full Sync：
+  - 返回 `fullsync` 还是 `incremental` 由后端决定，前端不判断版本差距。
+  - `fullsync`：后端返回完整 `menu`，前端覆盖本地菜单并更新 `sync_version`。
+  - `incremental`：后端返回 `changes`，前端按版本顺序逐条应用，应用成功后保存最新 `version`。
+  - 无本地菜单或无 `sync_version` 时执行 Full Sync（前端不携带 `since`，后端应返回 `fullsync`）。
+
+- fullsync 响应示例：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "menu": [
+    {
+      "id": 1,
+      "name": "红烧肉",
+      "position": { "stair": 1, "window": 1 },
+      "image": "",
+      "rate": 4.8,
+      "price": 18
+    }
+  ]
+}
+```
+
+- incremental 响应示例（`changes` 已按版本顺序排列）：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    {
+      "op": "create",
+      "data": {
+        "id": 16,
+        "name": "新菜品",
+        "position": { "stair": 2, "window": 8 },
+        "image": "",
+        "rate": 0,
+        "price": 12
+      }
+    },
+    {
+      "op": "update",
+      "data": { "id": 1, "rate": 4.9 }
+    },
+    {
+      "op": "delete",
+      "id": 3
+    }
+  ]
+}
+```
+
+- create / update / delete 数据格式：
+
+| op | 数据格式 | 说明 |
+| --- | --- | --- |
+| create | `{ "op": "create", "data": Dish }` | 新增菜品 |
+| update | `{ "op": "update", "data": Partial<Dish> }` | 只合并返回字段；`rate` 更新只修改对应 Dish 的 `rate`，其余字段保持不变；本地不存在该 Dish 时忽略 |
+| delete | `{ "op": "delete", "id": number }` | 按 `id` 删除；也兼容 `{ "op": "delete", "data": { "id": number } }` 写法 |
+
+- 开发环境 mock 回退：无 `since` 时模拟 fullsync（保持当前本地菜单），有 `since` 时模拟空增量。
+
+#### 前端调用
+
+- 前端方法：`getMenu()`
+- 参数：无
+- 返回值：`Promise<Dish[]>`
+- 返回数据类型：完整 `Dish[]`（Dish 实例，字段含 `id`、`name`、`position`、`image`、`rate`、`price`）
+- 简单调用示例：
+
+```js
+import { getMenu } from '@/api/getMenu';
+
+const menu = await getMenu();
+console.log(menu);
+```
