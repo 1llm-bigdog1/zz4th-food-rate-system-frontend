@@ -5,7 +5,7 @@
  * 3. 维护这类文件时，优先保证对外暴露的数据、计算属性和事件接口稳定，避免影响多个视图层。
  */
 import { computed, ref, watch } from 'vue';
-import { createMockDishes } from '@/data/mockData';
+import { getCached, STORES } from '@/db/indexedDB';
 import { ratingDetailText, sharedText } from '@/models/text';
 
 // 排行榜页的桌面端和移动端共用这一份数据组织逻辑。
@@ -20,7 +20,7 @@ export const useRatingDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const dishes = ref(createMockDishes());
+    const dishes = ref(getCached(STORES.dishes));
     const alpha = ref(0.5);
 
     watch(alpha, (value) => {

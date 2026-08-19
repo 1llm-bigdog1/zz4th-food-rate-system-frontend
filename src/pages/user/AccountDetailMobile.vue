@@ -23,7 +23,7 @@
                 <a-form-item label="班级"><a-input v-model:value="form.className" /></a-form-item>
                 <a-form-item label="姓名"><a-input v-model:value="form.realName" /></a-form-item>
                 <a-form-item label="头像链接"><a-input v-model:value="form.avatar" /></a-form-item>
-                <a-button type="primary" block>提交更改</a-button>
+                <a-button type="primary" block @click="saveAccount">提交更改</a-button>
             </a-form>
         </section>
         <section class="stats-card">
@@ -37,7 +37,7 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
-const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback } = useAccountDetailPage();
+const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback, saveAccount } = useAccountDetailPage();
 </script>
 
 <style scoped>

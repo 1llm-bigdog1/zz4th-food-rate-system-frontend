@@ -5,7 +5,7 @@
  * 3. 维护这类文件时，优先保证对外暴露的数据、计算属性和事件接口稳定，避免影响多个视图层。
  */
 import { computed, ref, watch } from 'vue';
-import { createMockDishes } from '@/data/mockData';
+import { getCached, STORES } from '@/db/indexedDB';
 import { homePageText, sharedText } from '@/models/text';
 
 export const useHomePageView = () => {
@@ -15,7 +15,7 @@ export const useHomePageView = () => {
         pageSizeText: '\u6bcf\u9875\u663e\u793a',
     };
 
-    const dishes = ref(createMockDishes());
+    const dishes = ref(getCached(STORES.dishes));
     const overviewCurrent = ref(1);
     const overviewPageSize = ref(8);
     const pageSizeOptions = ['4', '8', '12'];

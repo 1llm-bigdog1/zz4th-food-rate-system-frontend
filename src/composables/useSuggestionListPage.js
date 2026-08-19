@@ -8,7 +8,7 @@ import { computed, ref } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import Suggestion from '@/models/Suggestion';
-import { createMockSuggestions } from '@/data/mockData';
+import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
 
@@ -32,7 +32,7 @@ export const useSuggestionListPage = () => {
         myUserName: '我',
     };
 
-    const suggestions = ref(createMockSuggestions());
+    const suggestions = ref(getCached(STORES.suggestions));
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleSuggestions = computed(() => suggestions.value.slice(0, visibleCount.value));
@@ -52,8 +52,9 @@ export const useSuggestionListPage = () => {
         router.push(`/suggestion-detail/${item.id}`);
     };
 
-    const toggleLike = (item) => {
+    const toggleLike = async (item) => {
         item.like += 1;
+        await putRecord(STORES.suggestions, item);
     };
 
     const submitSuggestion = async () => {
@@ -67,16 +68,16 @@ export const useSuggestionListPage = () => {
         const reviewResult = await submitContentForReview({ type: 'suggestion', comment: cleanComment });
 
         if (reviewResult.approved) {
-            suggestions.value.unshift(
-                new Suggestion(
-                    Date.now(),
-                    text.myUserName,
-                    new Date().toISOString().slice(0, 10),
-                    cleanComment,
-                    0,
-                    [],
-                ),
+            const newSuggestion = new Suggestion(
+                Date.now(),
+                text.myUserName,
+                new Date().toISOString().slice(0, 10),
+                cleanComment,
+                0,
+                [],
             );
+            suggestions.value.unshift(newSuggestion);
+            await putRecord(STORES.suggestions, newSuggestion);
         }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);

@@ -9,9 +9,10 @@ import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import Selection from '@/models/Selection';
 import Position from '@/models/Position';
-import { buildFloorOptions, buildWindowOptions, createMockSelections } from '@/data/mockData';
+import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { selectionListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
+import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 
 // 严选列表页相对复杂，包含分享表单和评分弹窗。
 // 这里把业务状态全部抽离，保证双端行为完全一致。
@@ -23,7 +24,7 @@ export const useSelectionListPage = () => {
         ...selectionListText,
     };
 
-    const selections = ref(createMockSelections());
+    const selections = ref(getCached(STORES.selections));
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleSelections = computed(() => selections.value.slice(0, visibleCount.value));
@@ -107,17 +108,17 @@ export const useSelectionListPage = () => {
         });
 
         if (reviewResult.approved) {
-            selections.value.unshift(
-                new Selection(
-                    Date.now(),
-                    text.myUserName,
-                    new Date().toISOString().slice(0, 10),
-                    cleanComment,
-                    form.value.price,
-                    validPositions.map((item) => new Position(item.floor, item.window)),
-                    5,
-                ),
-        );
+            const newSelection = new Selection(
+                Date.now(),
+                text.myUserName,
+                new Date().toISOString().slice(0, 10),
+                cleanComment,
+                form.value.price,
+                validPositions.map((item) => new Position(item.floor, item.window)),
+                5,
+            );
+            selections.value.unshift(newSelection);
+            await putRecord(STORES.selections, newSelection);
         }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);

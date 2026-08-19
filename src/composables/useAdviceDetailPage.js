@@ -7,7 +7,7 @@
 import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { createMockAdviceComments, createMockAdvices } from '@/data/mockData';
+import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import AdviceComment from '@/models/AdviceComment';
 import { submitContentForReview } from '@/api/review';
 
@@ -36,10 +36,10 @@ export const useAdviceDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const advices = ref(createMockAdvices());
+    const advices = ref(getCached(STORES.advices));
     const currentAdviceId = Number(route.params.id);
     const currentAdvice = computed(() => advices.value.find((item) => item.id === currentAdviceId) || advices.value[0]);
-    const comments = ref(createMockAdviceComments(currentAdvice.value.id));
+    const comments = ref(getCached(STORES.adviceComments));
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
     const currentPage = ref(1);
@@ -86,13 +86,17 @@ export const useAdviceDetailPage = () => {
         replyContent.value = '';
     };
 
-    const toggleAdviceLike = () => {
+    const toggleAdviceLike = async () => {
         currentAdvice.value.like += 1;
+        await putRecord(STORES.advices, currentAdvice.value);
     };
 
-    const toggleCommentLike = (commentId) => {
+    const toggleCommentLike = async (commentId) => {
         const target = comments.value.find((item) => item.id === commentId);
-        if (target) target.likes += 1;
+        if (target) {
+            target.likes += 1;
+            await putRecord(STORES.adviceComments, target);
+        }
     };
 
     const submitReply = async () => {
@@ -111,17 +115,17 @@ export const useAdviceDetailPage = () => {
         });
 
         if (reviewResult.approved) {
-            comments.value.push(
-                new AdviceComment(
-                    `${currentAdvice.value.id}-comment-${Date.now()}`,
-                    text.myUserName,
-                    new Date().toISOString().slice(0, 10),
-                    currentAdvice.value.id,
-                    cleanReply,
-                    activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
-                    0,
-                ),
+            const newComment = new AdviceComment(
+                `${currentAdvice.value.id}-comment-${Date.now()}`,
+                text.myUserName,
+                new Date().toISOString().slice(0, 10),
+                currentAdvice.value.id,
+                cleanReply,
+                activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
+                0,
             );
+            comments.value.push(newComment);
+            await putRecord(STORES.adviceComments, newComment);
         }
 
         cancelReply();

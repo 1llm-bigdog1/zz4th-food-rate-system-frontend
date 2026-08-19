@@ -34,7 +34,7 @@
                                         <a-input v-model:value="form.avatar" placeholder="请输入头像链接（可选）" />
                                     </div>
                                 </a-form-item>
-                                <a-form-item class="submit-item"><a-button type="primary">提交更改</a-button></a-form-item>
+                                <a-form-item class="submit-item"><a-button type="primary" @click="saveAccount">提交更改</a-button></a-form-item>
                             </a-form>
                         </a-card>
                         <a-divider />
@@ -53,7 +53,7 @@
 <script setup>
 import badgeLogo from '@/static/badge.png';
 import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
-const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback } = useAccountDetailPage();
+const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback, saveAccount } = useAccountDetailPage();
 </script>
 
 <style scoped>

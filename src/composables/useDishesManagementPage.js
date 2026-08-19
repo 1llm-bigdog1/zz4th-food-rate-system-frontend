@@ -8,9 +8,10 @@ import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import Dish from '@/models/Dish';
 import noImage from '@/static/no_image.png';
-import { buildFloorOptions, buildWindowOptions, createMockDishes } from '@/data/mockData';
+import { getCached, putRecord, removeRecord, STORES } from '@/db/indexedDB';
 import { dishesListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
+import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 
 export const useDishesManagementPage = () => {
     const text = {
@@ -38,7 +39,7 @@ export const useDishesManagementPage = () => {
         submitModify: sharedText.submitModify,
     };
 
-    const dishes = ref(createMockDishes());
+    const dishes = ref(getCached(STORES.dishes));
     const searchInput = ref('');
     const searchKeyword = ref('');
     const selectedFloor = ref(undefined);
@@ -175,6 +176,7 @@ export const useDishesManagementPage = () => {
             };
             targetDish.price = nextForm.price ?? targetDish.price;
             targetDish.image = getImageFromFileList(nextForm.fileList, targetDish.image);
+            await putRecord(STORES.dishes, targetDish);
         }
         editForm.value = nextForm;
         editModalVisible.value = false;
@@ -196,25 +198,29 @@ export const useDishesManagementPage = () => {
         addModalVisible.value = false;
     };
 
-    const submitAdd = (nextForm) => {
+    const submitAdd = async (nextForm) => {
         const nextId = dishes.value.length ? Math.max(...dishes.value.map((dish) => dish.id)) + 1 : 1;
-        dishes.value.unshift(
-            new Dish(
-                nextId,
-                nextForm.name.trim(),
-                { stair: nextForm.stair ?? 1, window: nextForm.window ?? 1 },
-                getImageFromFileList(nextForm.fileList, noImage),
-                0,
-                nextForm.price ?? 0,
-            ),
+        const newDish = new Dish(
+            nextId,
+            nextForm.name.trim(),
+            { stair: nextForm.stair ?? 1, window: nextForm.window ?? 1 },
+            getImageFromFileList(nextForm.fileList, noImage),
+            0,
+            nextForm.price ?? 0,
         );
+        dishes.value.unshift(newDish);
+        await putRecord(STORES.dishes, newDish);
         addModalVisible.value = false;
         currentPage.value = 1;
         message.success(text.addSuccess);
     };
 
-    const deleteDish = (record) => {
-        dishes.value = dishes.value.filter((dish) => dish.id !== record.id);
+    const deleteDish = async (record) => {
+        const index = dishes.value.findIndex((dish) => dish.id === record.id);
+        if (index >= 0) {
+            dishes.value.splice(index, 1);
+            await removeRecord(STORES.dishes, record.id);
+        }
         message.success(text.deleteSuccess);
     };
 

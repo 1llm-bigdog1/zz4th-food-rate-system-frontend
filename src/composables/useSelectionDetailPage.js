@@ -7,7 +7,7 @@
 import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { createMockSelectionComments, createMockSelections } from '@/data/mockData';
+import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
@@ -36,10 +36,10 @@ export const useSelectionDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const selections = createMockSelections();
+    const selections = ref(getCached(STORES.selections));
     const routeSelectionId = Number(route.params.id);
-    const currentSelection = computed(() => selections.find((item) => item.id === routeSelectionId) || selections[0]);
-    const comments = ref(createMockSelectionComments(currentSelection.value.id));
+    const currentSelection = computed(() => selections.value.find((item) => item.id === routeSelectionId) || selections.value[0]);
+    const comments = ref(getCached(STORES.selectionComments));
 
     const buildCommentTree = (items, parentId = null, level = 0) =>
         items
@@ -127,21 +127,21 @@ export const useSelectionDetailPage = () => {
         });
 
         if (reviewResult.approved) {
-            comments.value.push(
-                new SelectionComment(
-                    `${currentSelection.value.id}-comment-${Date.now()}`,
-                    text.myUserName,
-                    new Date().toISOString().slice(0, 10),
-                    cleanReply,
-                    currentSelection.value.id,
-                    activeReplyTarget.value.type === 'comment'
-                        ? {
-                            'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
-                            'comment-id': activeReplyTarget.value.id,
-                        }
-                        : null,
-                ),
+            const newComment = new SelectionComment(
+                `${currentSelection.value.id}-comment-${Date.now()}`,
+                text.myUserName,
+                new Date().toISOString().slice(0, 10),
+                cleanReply,
+                currentSelection.value.id,
+                activeReplyTarget.value.type === 'comment'
+                    ? {
+                        'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
+                        'comment-id': activeReplyTarget.value.id,
+                    }
+                    : null,
             );
+            comments.value.push(newComment);
+            await putRecord(STORES.selectionComments, newComment);
         }
 
         cancelReply();

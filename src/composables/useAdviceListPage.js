@@ -8,7 +8,7 @@ import { computed, ref } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import Advice from '@/models/Advice';
-import { createMockAdvices } from '@/data/mockData';
+import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
 
@@ -33,7 +33,7 @@ export const useAdviceListPage = () => {
         myUserName: '我',
     };
 
-    const advices = ref(createMockAdvices());
+    const advices = ref(getCached(STORES.advices));
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleAdvices = computed(() => advices.value.slice(0, visibleCount.value));
@@ -53,8 +53,9 @@ export const useAdviceListPage = () => {
         router.push(`/advice-detail/${item.id}`);
     };
 
-    const toggleLike = (item) => {
+    const toggleLike = async (item) => {
         item.like += 1;
+        await putRecord(STORES.advices, item);
     };
 
     const submitAdvice = async () => {
@@ -68,16 +69,16 @@ export const useAdviceListPage = () => {
         const reviewResult = await submitContentForReview({ type: 'advice', comment: cleanComment });
 
         if (reviewResult.approved) {
-            advices.value.unshift(
-                new Advice(
-                    Date.now(),
-                    text.myUserName,
-                    new Date().toISOString().slice(0, 10),
-                    cleanComment,
-                    0,
-                    [],
-                ),
+            const newAdvice = new Advice(
+                Date.now(),
+                text.myUserName,
+                new Date().toISOString().slice(0, 10),
+                cleanComment,
+                0,
+                [],
             );
+            advices.value.unshift(newAdvice);
+            await putRecord(STORES.advices, newAdvice);
         }
 
         visibleCount.value = Math.max(visibleCount.value, pageSize);

@@ -9,9 +9,19 @@ import App from './App.vue';
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/reset.css';
 import router from './router';
+import { clearTestData, initLocalData } from '@/db/indexedDB';
+
+// 开发环境暴露测试数据清理入口，便于在浏览器控制台验证：
+// 调用 window.__LOCAL_DB.clearTestData() 只会删除首次初始化写入的测试数据。
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+    window.__LOCAL_DB = { clearTestData };
+}
 
 // 应用入口：统一挂载 UI 库与路由。
-createApp(App)
-	.use(Antd)
-	.use(router)
-	.mount('#app');
+// 先初始化本地 IndexedDB（首次创建时写入测试数据），再挂载应用。
+initLocalData().finally(() => {
+    createApp(App)
+        .use(Antd)
+        .use(router)
+        .mount('#app');
+});

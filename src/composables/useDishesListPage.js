@@ -6,9 +6,10 @@
  */
 import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
-import { buildFloorOptions, buildWindowOptions, createMockDishes } from '@/data/mockData';
+import { getCached, STORES } from '@/db/indexedDB';
 import { dishesListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
+import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 
 export const useDishesListPage = () => {
     const text = {
@@ -26,7 +27,7 @@ export const useDishesListPage = () => {
         resetFilters: '\u91cd\u7f6e\u7b5b\u9009',
     };
 
-    const dishes = ref(createMockDishes());
+    const dishes = ref(getCached(STORES.dishes));
     const searchInput = ref('');
     const searchKeyword = ref('');
     const selectedFloor = ref(undefined);
