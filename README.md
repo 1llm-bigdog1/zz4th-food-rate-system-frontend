@@ -266,3 +266,239 @@ import { getMenu } from '@/api/getMenu';
 const menu = await getMenu();
 console.log(menu);
 ```
+
+### 新品建议增量同步
+
+- 函数名：`getAdvice`
+- 前端调用方式：`import { getAdvice } from '@/api/getAdvice'; await getAdvice();`
+- 返回值：`Promise<Advice[]>`（Advice 实例，字段含 `id`、`user_id`、`date`、`comment`、`like`、`follow_comments`）
+- 后端请求方法和路径：`GET /advice/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `advice_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`advice_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": Advice },
+    { "op": "update", "data": "Partial<Advice>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "advices": [ "Advice" ]
+}
+```
+
+### 新品建议评论增量同步
+
+- 函数名：`getAdviceComments`
+- 前端调用方式：`import { getAdviceComments } from '@/api/getAdviceComments'; await getAdviceComments();`
+- 返回值：`Promise<AdviceComment[]>`（AdviceComment 实例，字段含 `id`、`user_id`、`date`、`advice_id`、`reply`、`parent_id`、`likes`）
+- 后端请求方法和路径：`GET /advice-comments/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `advice_comment_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`advice_comment_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": AdviceComment },
+    { "op": "update", "data": "Partial<AdviceComment>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "adviceComments": [ "AdviceComment" ]
+}
+```
+
+### 食堂建议增量同步
+
+- 函数名：`getSuggestion`
+- 前端调用方式：`import { getSuggestion } from '@/api/getSuggestion'; await getSuggestion();`
+- 返回值：`Promise<Suggestion[]>`（Suggestion 实例，字段含 `id`、`user_id`、`date`、`comment`、`like`、`follow_comments`）
+- 后端请求方法和路径：`GET /suggestion/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `suggestion_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`suggestion_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": Suggestion },
+    { "op": "update", "data": "Partial<Suggestion>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "suggestions": [ "Suggestion" ]
+}
+```
+
+### 食堂建议评论增量同步
+
+- 函数名：`getSuggestionComments`
+- 前端调用方式：`import { getSuggestionComments } from '@/api/getSuggestionComments'; await getSuggestionComments();`
+- 返回值：`Promise<SuggestionComment[]>`（SuggestionComment 实例，字段含 `id`、`user_id`、`date`、`suggestion_id`、`reply`、`parent_id`、`likes`）
+- 后端请求方法和路径：`GET /suggestion-comments/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `suggestion_comment_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`suggestion_comment_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": SuggestionComment },
+    { "op": "update", "data": "Partial<SuggestionComment>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "suggestionComments": [ "SuggestionComment" ]
+}
+```
+
+### 严选分享增量同步
+
+- 函数名：`getSelection`
+- 前端调用方式：`import { getSelection } from '@/api/getSelection'; await getSelection();`
+- 返回值：`Promise<Selection[]>`（Selection 实例，字段含 `id`、`user_id`、`date`、`comment`、`price`、`position`、`rate`、`follow_comments`）
+- 后端请求方法和路径：`GET /selection/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `selection_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`selection_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": Selection },
+    { "op": "update", "data": "Partial<Selection>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "selections": [ "Selection" ]
+}
+```
+
+### 严选分享评论增量同步
+
+- 函数名：`getSelectionComments`
+- 前端调用方式：`import { getSelectionComments } from '@/api/getSelectionComments'; await getSelectionComments();`
+- 返回值：`Promise<SelectionComment[]>`（SelectionComment 实例，字段含 `id`、`user_id`、`date`、`detail`、`selection_id`、`reply`）
+- 后端请求方法和路径：`GET /selection-comments/sync`
+- Query 参数：
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| since | number | 否 | 本地 `selection_comment_version`；无本地数据或无版本号时不携带 |
+
+- 对应版本号：`selection_comment_version`（IndexedDB `meta` 仓库记录 id，与其他数据域完全独立）
+- 增量响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "incremental",
+  "version": 124,
+  "changes": [
+    { "op": "create", "data": SelectionComment },
+    { "op": "update", "data": "Partial<SelectionComment>" },
+    { "op": "delete", "id": 3 }
+  ]
+}
+```
+
+- Full Sync 响应格式：
+
+```json
+{
+  "success": true,
+  "mode": "fullsync",
+  "version": 123,
+  "selectionComments": [ "SelectionComment" ]
+}
+```
+
+以上 6 个接口通用行为与菜单同步一致：`changes` 按版本顺序逐条应用；`update` 只合并返回字段，本地不存在该记录时忽略；是否返回 `fullsync` 或 `incremental` 由后端决定，前端不判断版本差距；无本地数据或无对应版本号时不携带 `since` 并执行 Full Sync；同步成功后保存最新版本号。开发环境 mock 回退与 `getMenu` 一致：无 `since` 时模拟 fullsync（保持当前本地数据），有 `since` 时模拟空增量。

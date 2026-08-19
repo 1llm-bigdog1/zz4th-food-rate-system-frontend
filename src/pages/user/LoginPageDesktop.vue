@@ -24,7 +24,7 @@
                             <span class="captcha-hint">后续可接入滑块或图形验证码组件</span>
                         </div>
                         <a-button type="link" class="link-btn">忘记了密码？</a-button>
-                        <a-button type="link" class="forum-auth-btn">校园论坛授权登录</a-button>
+                        <!-- <a-button type="link" class="forum-auth-btn">校园论坛授权登录</a-button> -->
                         <div class="actions">
                             <a-button type="link" class="create-btn">注册新账户</a-button>
                             <a-button type="primary" shape="round" size="large" class="next-btn">登录</a-button>
