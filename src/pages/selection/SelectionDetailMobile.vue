@@ -29,7 +29,7 @@
                 <a-textarea v-model:value="replyContent" :rows="4" :placeholder="detailText.replyPlaceholder" />
                 <div class="reply-actions">
                     <a-button @click="cancelReply">{{ detailText.cancelReply }}</a-button>
-                    <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                    <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                 </div>
             </div>
         </section>
@@ -56,7 +56,7 @@
                         <a-textarea v-model:value="replyContent" :rows="4" :placeholder="detailText.replyPlaceholder" />
                         <div class="reply-actions">
                             <a-button @click="cancelReply">{{ detailText.cancelReply }}</a-button>
-                            <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                            <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                         </div>
                     </div>
                 </article>
@@ -66,7 +66,7 @@
                 <a-pagination v-model:current="currentPage" v-model:page-size="pageSize" size="small" :total="commentList.length" :show-size-changer="true" :page-size-options="pageSizeOptions" />
             </div>
         </section>
-        <RatingModal :open="ratingModalVisible" :title="ratingModalTitle" :rating-value="ratingValue" :submit-text="text.submitRating" @update:ratingValue="updateRatingValue" @cancel="closeRatingModal" @submit="submitRating" />
+        <RatingModal :open="ratingModalVisible" :title="ratingModalTitle" :rating-value="ratingValue" :loading="submitting" :submit-text="text.submitRating" @update:ratingValue="updateRatingValue" @cancel="closeRatingModal" @submit="submitRating" />
     </MobilePageShell>
 </template>
 
@@ -74,7 +74,7 @@
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import RatingModal from '@/components/RatingModal.vue';
 import { useSelectionDetailPage } from '@/composables/useSelectionDetailPage';
-const { text, detailText, currentSelection, pagedCommentList, commentList, ratingModalVisible, ratingModalTitle, ratingValue, replyContent, currentPage, pageSize, pageSizeOptions, getSelectionTargetKey, getCommentTargetKey, formatPosition, getTargetRate, isReplyingTo, openReplyBox, cancelReply, openRatingModal, updateRatingValue, closeRatingModal, submitRating, submitReply, goBack } = useSelectionDetailPage();
+const { text, detailText, currentSelection, pagedCommentList, commentList, ratingModalVisible, ratingModalTitle, ratingValue, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getSelectionTargetKey, getCommentTargetKey, formatPosition, getTargetRate, isReplyingTo, openReplyBox, cancelReply, openRatingModal, updateRatingValue, closeRatingModal, submitRating, submitReply, goBack } = useSelectionDetailPage();
 </script>
 
 <style scoped>

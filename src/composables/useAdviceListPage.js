@@ -10,12 +10,14 @@ import { useRouter } from 'vue-router';
 import Advice from '@/models/Advice';
 import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
-import { submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 // 新品建议列表页的所有业务状态都集中在这里，
 // 桌面端和移动端只负责展示，不复制提交和跳转逻辑。
 export const useAdviceListPage = () => {
     const router = useRouter();
+    const { ensureLoggedIn } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -42,6 +44,7 @@ export const useAdviceListPage = () => {
     const form = ref({
         comment: '',
     });
+    const submitting = ref(false);
 
     const getUserInitial = (userId) => userId.slice(0, 1);
 
@@ -59,6 +62,9 @@ export const useAdviceListPage = () => {
     };
 
     const submitAdvice = async () => {
+        if (submitting.value) {
+            return;
+        }
         const cleanComment = form.value.comment.trim();
 
         if (!cleanComment) {
@@ -66,9 +72,27 @@ export const useAdviceListPage = () => {
             return;
         }
 
-        const reviewResult = await submitContentForReview({ type: 'advice', comment: cleanComment });
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
 
-        if (reviewResult.approved) {
+        submitting.value = true;
+        try {
+            const reviewResult = await submitContentForReview({ type: 'advice', comment: cleanComment });
+            const status = getReviewStatus(reviewResult);
+            if (status === 'rejected') {
+                message.error('内容未通过审核，无法显示');
+                return;
+            }
+            if (status === 'pending') {
+                message.info('内容已提交，审核通过后显示');
+                return;
+            }
+            if (status !== 'approved') {
+                message.error('提交失败，请稍后重试');
+                return;
+            }
+
             const newAdvice = new Advice(
                 Date.now(),
                 text.myUserName,
@@ -79,16 +103,18 @@ export const useAdviceListPage = () => {
             );
             advices.value.unshift(newAdvice);
             await putRecord(STORES.advices, newAdvice);
+            visibleCount.value = Math.max(visibleCount.value, pageSize);
+            form.value.comment = '';
+            message.success(text.submitSuccess);
+        } finally {
+            submitting.value = false;
         }
-
-        visibleCount.value = Math.max(visibleCount.value, pageSize);
-        form.value.comment = '';
-        message.success(text.submitSuccess);
     };
 
     return {
         text,
         form,
+        submitting,
         visibleAdvices,
         hasMore,
         getUserInitial,

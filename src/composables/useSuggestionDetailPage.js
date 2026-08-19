@@ -9,12 +9,14 @@ import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import SuggestionComment from '@/models/SuggestionComment';
-import { submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 // 食堂建议详情页与新品建议详情页结构一致，但数据源不同。
 export const useSuggestionDetailPage = () => {
     const route = useRoute();
     const router = useRouter();
+    const { ensureLoggedIn } = useLoginGuard();
 
     const text = {
         back: '返回',
@@ -42,6 +44,7 @@ export const useSuggestionDetailPage = () => {
     const comments = ref(getCached(STORES.suggestionComments));
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
+    const submitting = ref(false);
     const currentPage = ref(1);
     const pageSize = ref(5);
     const pageSizeOptions = ['5', '10', '20'];
@@ -100,6 +103,9 @@ export const useSuggestionDetailPage = () => {
     };
 
     const submitReply = async () => {
+        if (submitting.value) {
+            return;
+        }
         const cleanReply = replyContent.value.trim();
 
         if (!cleanReply) {
@@ -107,14 +113,32 @@ export const useSuggestionDetailPage = () => {
             return;
         }
 
-        const reviewResult = await submitContentForReview({
-            type: 'suggestion-comment',
-            suggestionId: currentSuggestion.value.id,
-            reply: cleanReply,
-            target: activeReplyTarget.value,
-        });
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
 
-        if (reviewResult.approved) {
+        submitting.value = true;
+        try {
+            const reviewResult = await submitContentForReview({
+                type: 'suggestion-comment',
+                suggestionId: currentSuggestion.value.id,
+                reply: cleanReply,
+                target: activeReplyTarget.value,
+            });
+            const status = getReviewStatus(reviewResult);
+            if (status === 'rejected') {
+                message.error('评论未通过审核，无法显示');
+                return;
+            }
+            if (status === 'pending') {
+                message.info('评论已提交，审核通过后显示');
+                return;
+            }
+            if (status !== 'approved') {
+                message.error('提交失败，请稍后重试');
+                return;
+            }
+
             const newComment = new SuggestionComment(
                 `${currentSuggestion.value.id}-comment-${Date.now()}`,
                 text.myUserName,
@@ -126,10 +150,11 @@ export const useSuggestionDetailPage = () => {
             );
             comments.value.push(newComment);
             await putRecord(STORES.suggestionComments, newComment);
+            cancelReply();
+            message.success(text.submitSuccess);
+        } finally {
+            submitting.value = false;
         }
-
-        cancelReply();
-        message.success(text.submitSuccess);
     };
 
     watch([pageSize, commentList], () => {
@@ -145,6 +170,7 @@ export const useSuggestionDetailPage = () => {
         pagedCommentList,
         commentList,
         replyContent,
+        submitting,
         currentPage,
         pageSize,
         pageSizeOptions,

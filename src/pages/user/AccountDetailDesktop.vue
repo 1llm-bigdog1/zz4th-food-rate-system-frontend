@@ -2,7 +2,7 @@
   文件说明：AccountDetailDesktop.vue
   1. 这是桌面端视图文件，负责在大屏设备中保留更高信息密度的排版结构。
   2. 该文件位于 src\pages\user 目录下，和同层文件一起构成当前功能模块的视图或结构层。
-  3. 文件中的脚本、模板和样式会围绕同一职责组织，便于后续维护时快速定位问题。
+  3. 数据源为 getUser() 返回的 User 实例；加载期间显示 Skeleton，401 由 composable 处理跳转登录页。
 -->
 <template>
     <div id="account-detail-page">
@@ -12,37 +12,39 @@
                     <a-col :xs="24" :md="9" class="left-panel">
                         <div class="logo-wrap" aria-label="账户中心"><img :src="badgeLogo" alt="校徽" class="logo-image" /></div>
                         <h1 class="title">管理您的账户</h1>
-                        <p class="subtitle">账户信息、等级和统计都在这里查看与编辑。</p>
+                        <p class="subtitle">账户信息、等级和统计都在这里查看。</p>
                     </a-col>
                     <a-col :xs="24" :md="15" class="right-panel">
                         <a-card size="small" :bordered="false" class="editor-card">
-                            <a-form layout="vertical">
-                                <a-row :gutter="14">
-                                    <a-col :xs="24" :sm="12"><a-form-item label="用户名"><a-input v-model:value="form.username" placeholder="请输入用户名" /></a-form-item></a-col>
-                                    <a-col :xs="24" :sm="12"><a-form-item label="昵称"><a-input v-model:value="form.nickname" placeholder="请输入昵称" /></a-form-item></a-col>
-                                </a-row>
-                                <a-form-item label="性别"><a-select v-model:value="form.gender" :options="genderOptions" /></a-form-item>
-                                <a-form-item v-if="form.gender === '自定义'" label="自定义性别"><a-input v-model:value="form.customGender" placeholder="请输入自定义性别" /></a-form-item>
-                                <a-row :gutter="14">
-                                    <a-col :xs="24" :sm="8"><a-form-item label="届别（可选）"><a-select v-model:value="form.gradYear" placeholder="选择届别" :options="gradYearOptions" allow-clear /></a-form-item></a-col>
-                                    <a-col :xs="24" :sm="8"><a-form-item label="班级（可选）"><a-input v-model:value="form.className" placeholder="例如：3班" /></a-form-item></a-col>
-                                    <a-col :xs="24" :sm="8"><a-form-item label="姓名（可选）"><a-input v-model:value="form.realName" placeholder="请输入姓名" /></a-form-item></a-col>
-                                </a-row>
-                                <a-form-item label="头像">
-                                    <div class="avatar-row">
-                                        <a-avatar :size="72" :src="avatarPreview">{{ avatarFallback }}</a-avatar>
-                                        <a-input v-model:value="form.avatar" placeholder="请输入头像链接（可选）" />
+                            <a-skeleton v-if="loading" :paragraph="{ rows: 7 }" active />
+                            <template v-else-if="user">
+                                <div class="user-head">
+                                    <a-avatar :size="72" :src="avatarPreview">{{ avatarFallback }}</a-avatar>
+                                    <div class="user-head-info">
+                                        <div class="user-name">{{ user.nickname || user.username }}</div>
+                                        <div class="user-account">@{{ user.username }}</div>
                                     </div>
-                                </a-form-item>
-                                <a-form-item class="submit-item"><a-button type="primary" @click="saveAccount">提交更改</a-button></a-form-item>
-                            </a-form>
+                                </div>
+                                <a-divider />
+                                <div class="info-list">
+                                    <div class="info-row"><span class="info-label">用户ID</span><span class="info-value">{{ user.id }}</span></div>
+                                    <div class="info-row"><span class="info-label">用户名</span><span class="info-value">{{ user.username }}</span></div>
+                                    <div class="info-row"><span class="info-label">昵称</span><span class="info-value">{{ user.nickname }}</span></div>
+                                    <div class="info-row"><span class="info-label">真实姓名</span><span class="info-value">{{ user.realname }}</span></div>
+                                    <div class="info-row"><span class="info-label">性别</span><span class="info-value">{{ user.gender }}</span></div>
+                                    <div class="info-row"><span class="info-label">届别</span><span class="info-value">{{ user.session }}</span></div>
+                                    <div class="info-row"><span class="info-label">班级</span><span class="info-value">{{ user.classid }}</span></div>
+                                    <div class="info-row"><span class="info-label">邮箱</span><span class="info-value">{{ user.email }}</span></div>
+                                </div>
+                                <a-divider />
+                                <a-row :gutter="[14, 14]">
+                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><a-statistic title="注册日期" :value="user.register_date" /></a-card></a-col>
+                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><div class="level-title">等级</div><a-tag color="blue" class="level-text">Lv{{ user.level }}</a-tag></a-card></a-col>
+                                    <a-col :xs="24"><a-card size="small" class="info-card"><a-statistic title="参与评分数量" :value="user.rate_time" suffix="次" /></a-card></a-col>
+                                </a-row>
+                            </template>
+                            <a-empty v-else description="无法获取用户信息" />
                         </a-card>
-                        <a-divider />
-                        <a-row :gutter="[14, 14]">
-                            <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><a-statistic title="注册日期" :value="form.registerDate" /></a-card></a-col>
-                            <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><div class="level-title">等级</div><a-tag color="blue" class="level-text">Lv{{ form.level }}</a-tag></a-card></a-col>
-                            <a-col :xs="24"><a-card size="small" class="info-card"><a-statistic title="参与评分数量" :value="form.ratingCount" suffix="次" /></a-card></a-col>
-                        </a-row>
                     </a-col>
                 </a-row>
             </a-card>
@@ -53,7 +55,8 @@
 <script setup>
 import badgeLogo from '@/static/badge.png';
 import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
-const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback, saveAccount } = useAccountDetailPage();
+
+const { user, loading, avatarPreview, avatarFallback } = useAccountDetailPage();
 </script>
 
 <style scoped>
@@ -67,11 +70,15 @@ const { form, genderOptions, gradYearOptions, avatarPreview, avatarFallback, sav
 .subtitle { margin: 0; max-width: 360px; font-size: clamp(14px, .92vw, 16px); line-height: 1.5; }
 .right-panel { padding-top: clamp(8px, 1.4vh, 18px); }
 .editor-card, .info-card { border-radius: 14px; background: #ffffff; }
-#account-detail-page :deep(.ant-form-item) { margin-bottom: 14px; }
-#account-detail-page :deep(.ant-input), #account-detail-page :deep(.ant-input-affix-wrapper), #account-detail-page :deep(.ant-select-selector) { min-height: 42px; border-radius: 10px; border-color: var(--border-color); }
-.avatar-row { display: flex; align-items: center; gap: 14px; }
-#account-detail-page :deep(.avatar-row .ant-input) { max-width: 320px; }
-.submit-item { margin-bottom: 0; }
+.user-head { display: flex; align-items: center; gap: 16px; }
+.user-head-info { min-width: 0; }
+.user-name { color: #202124; font-size: 20px; font-weight: 700; }
+.user-account { color: #5f6368; font-size: 13px; }
+.info-list { display: flex; flex-direction: column; gap: 12px; }
+.info-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f1f2; }
+.info-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.info-label { color: #5f6368; font-size: 13px; flex-shrink: 0; }
+.info-value { color: #202124; font-size: 14px; font-weight: 500; text-align: right; word-break: break-all; }
 .level-title { margin-bottom: 10px; color: #5f6368; font-size: 12px; }
 .level-text { border-radius: 999px; padding: 4px 12px; font-weight: 600; }
 </style>

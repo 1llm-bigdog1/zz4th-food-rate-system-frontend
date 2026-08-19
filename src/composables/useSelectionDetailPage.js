@@ -10,12 +10,15 @@ import { useRoute, useRouter } from 'vue-router';
 import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
-import { submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { pushRate } from '@/api/pushRate';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 // 严选详情页包含回复树和针对主贴/评论的评分状态。
 export const useSelectionDetailPage = () => {
     const route = useRoute();
     const router = useRouter();
+    const { ensureLoggedIn } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -57,6 +60,8 @@ export const useSelectionDetailPage = () => {
 
     const ratingModalVisible = ref(false);
     const ratingValue = ref(0);
+    const ratingTargetType = ref('');
+    const ratingTargetId = ref('');
     const ratingTargetKey = ref('');
     const ratingTargetName = ref('');
     const targetRates = ref({
@@ -65,6 +70,7 @@ export const useSelectionDetailPage = () => {
 
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
+    const submitting = ref(false);
     const currentPage = ref(1);
     const pageSize = ref(5);
     const pageSizeOptions = ['5', '10', '20'];
@@ -88,6 +94,8 @@ export const useSelectionDetailPage = () => {
     };
 
     const openRatingModal = (type, id, userName) => {
+        ratingTargetType.value = type;
+        ratingTargetId.value = id;
         ratingTargetKey.value = type === 'selection' ? getSelectionTargetKey(id) : getCommentTargetKey(id);
         ratingTargetName.value = userName;
         ratingValue.value = getTargetRate(ratingTargetKey.value);
@@ -102,16 +110,39 @@ export const useSelectionDetailPage = () => {
         ratingModalVisible.value = false;
     };
 
-    const submitRating = () => {
-        targetRates.value = {
-            ...targetRates.value,
-            [ratingTargetKey.value]: ratingValue.value,
-        };
-        ratingModalVisible.value = false;
-        message.success(text.submitRating);
+    const submitRating = async () => {
+        if (submitting.value) {
+            return;
+        }
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        submitting.value = true;
+        try {
+            const result = await pushRate({
+                targetType: ratingTargetType.value,
+                targetId: ratingTargetId.value,
+                score: ratingValue.value,
+            });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '评分提交失败，请稍后重试');
+                return;
+            }
+            targetRates.value = {
+                ...targetRates.value,
+                [ratingTargetKey.value]: ratingValue.value,
+            };
+            ratingModalVisible.value = false;
+            message.success(text.submitRating);
+        } finally {
+            submitting.value = false;
+        }
     };
 
     const submitReply = async () => {
+        if (submitting.value) {
+            return;
+        }
         const cleanReply = replyContent.value.trim();
 
         if (!cleanReply) {
@@ -119,14 +150,32 @@ export const useSelectionDetailPage = () => {
             return;
         }
 
-        const reviewResult = await submitContentForReview({
-            type: 'selection-comment',
-            selectionId: currentSelection.value.id,
-            reply: cleanReply,
-            target: activeReplyTarget.value,
-        });
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
 
-        if (reviewResult.approved) {
+        submitting.value = true;
+        try {
+            const reviewResult = await submitContentForReview({
+                type: 'selection-comment',
+                selectionId: currentSelection.value.id,
+                reply: cleanReply,
+                target: activeReplyTarget.value,
+            });
+            const status = getReviewStatus(reviewResult);
+            if (status === 'rejected') {
+                message.error('评论未通过审核，无法显示');
+                return;
+            }
+            if (status === 'pending') {
+                message.info('评论已提交，审核通过后显示');
+                return;
+            }
+            if (status !== 'approved') {
+                message.error('提交失败，请稍后重试');
+                return;
+            }
+
             const newComment = new SelectionComment(
                 `${currentSelection.value.id}-comment-${Date.now()}`,
                 text.myUserName,
@@ -142,10 +191,11 @@ export const useSelectionDetailPage = () => {
             );
             comments.value.push(newComment);
             await putRecord(STORES.selectionComments, newComment);
+            cancelReply();
+            message.success(text.submitSuccess);
+        } finally {
+            submitting.value = false;
         }
-
-        cancelReply();
-        message.success(text.submitSuccess);
     };
 
     const goBack = () => {
@@ -169,6 +219,7 @@ export const useSelectionDetailPage = () => {
         ratingModalTitle,
         ratingValue,
         replyContent,
+        submitting,
         currentPage,
         pageSize,
         pageSizeOptions,

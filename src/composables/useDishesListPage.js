@@ -9,9 +9,13 @@ import { message } from 'ant-design-vue';
 import { getCached, STORES } from '@/db/indexedDB';
 import { dishesListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
+import { pushRate } from '@/api/pushRate';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 export const useDishesListPage = () => {
+    const { ensureLoggedIn } = useLoginGuard();
+
     const text = {
         ...sharedText,
         ...dishesListText,
@@ -88,8 +92,10 @@ export const useDishesListPage = () => {
     const hasMore = computed(() => visibleCount.value < sortedDishes.value.length);
 
     const ratingModalVisible = ref(false);
+    const ratingDishId = ref(null);
     const ratingDishName = ref('');
     const ratingValue = ref(0);
+    const submitting = ref(false);
     const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingDishName.value}${text.rateTitleSuffix}`);
 
     const editModalVisible = ref(false);
@@ -118,6 +124,7 @@ export const useDishesListPage = () => {
     };
 
     const openRatingModal = (record) => {
+        ratingDishId.value = record.id;
         ratingDishName.value = record.name;
         ratingValue.value = 0;
         ratingModalVisible.value = true;
@@ -131,8 +138,33 @@ export const useDishesListPage = () => {
         ratingModalVisible.value = false;
     };
 
-    const submitRating = () => {
-        ratingModalVisible.value = false;
+    const submitRating = async () => {
+        if (submitting.value) {
+            return;
+        }
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        if (!ratingValue.value) {
+            message.warning('请先选择评分');
+            return;
+        }
+        submitting.value = true;
+        try {
+            const result = await pushRate({
+                targetType: 'dish',
+                targetId: ratingDishId.value,
+                score: ratingValue.value,
+            });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '评分提交失败，请稍后重试');
+                return;
+            }
+            ratingModalVisible.value = false;
+            message.success(text.submitRating);
+        } finally {
+            submitting.value = false;
+        }
     };
 
     const openEditModal = (record) => {
@@ -151,16 +183,29 @@ export const useDishesListPage = () => {
     };
 
     const submitModify = async (nextForm) => {
-        if (nextForm) {
+        if (submitting.value) {
+            return;
+        }
+        if (!nextForm) {
+            editModalVisible.value = false;
+            return;
+        }
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        submitting.value = true;
+        try {
             await submitContentForReview({
                 type: 'dish-supplement',
                 dishName: editDishName.value,
                 ...nextForm,
             });
             editForm.value = nextForm;
+            editModalVisible.value = false;
+            message.success(text.modifySuccess);
+        } finally {
+            submitting.value = false;
         }
-        editModalVisible.value = false;
-        message.success(text.modifySuccess);
     };
 
     watch([searchKeyword, selectedFloor, selectedWindow], () => {
@@ -183,6 +228,7 @@ export const useDishesListPage = () => {
         ratingModalVisible,
         ratingModalTitle,
         ratingValue,
+        submitting,
         updateRatingValue,
         closeRatingModal,
         submitRating,

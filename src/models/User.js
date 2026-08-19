@@ -5,9 +5,18 @@
  * 3. 维护这类文件时，应尽量保持字段命名、默认值和导出方式一致，方便全项目复用。
  */
 export default class User {
-    constructor(id, name, avatar_path) {
+    constructor(id, username, avatar_path, gender, session, classid, nickname, realname, level, register_date, rate_time, email) {
         this.id = id;
-        this.name = name;
+        this.username = username;
+        this.gender = gender;
+        this.session = session;
+        this.classid = classid;
+        this.nickname = nickname;
+        this.realname = realname;
+        this.level = level;
+        this.register_date = register_date;
+        this.rate_time = rate_time;
         this.avatar_path = avatar_path;
+        this.email = email;
     }
 }

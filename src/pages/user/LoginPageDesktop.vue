@@ -17,8 +17,8 @@
                         <p class="subtitle">请使用你的账号登录系统。</p>
                     </a-col>
                     <a-col :xs="24" :md="13" class="right-panel">
-                        <a-input size="large" placeholder="请输入你的用户名" class="account-input" />
-                        <a-input-password size="large" placeholder="请输入你的密码" class="password-input" />
+                        <a-input v-model:value="form.account" size="large" placeholder="请输入你的用户名" class="account-input" @pressEnter="submitLogin" />
+                        <a-input-password v-model:value="form.password" size="large" placeholder="请输入你的密码" class="password-input" @pressEnter="submitLogin" />
                         <div class="captcha-placeholder">
                             <span class="captcha-title">人机验证预留区域</span>
                             <span class="captcha-hint">后续可接入滑块或图形验证码组件</span>
@@ -26,8 +26,8 @@
                         <a-button type="link" class="link-btn">忘记了密码？</a-button>
                         <!-- <a-button type="link" class="forum-auth-btn">校园论坛授权登录</a-button> -->
                         <div class="actions">
-                            <a-button type="link" class="create-btn">注册新账户</a-button>
-                            <a-button type="primary" shape="round" size="large" class="next-btn">登录</a-button>
+                            <a-button type="link" class="create-btn" @click="goToRegister">注册新账户</a-button>
+                            <a-button type="primary" shape="round" size="large" class="next-btn" :loading="submitting" @click="submitLogin">登录</a-button>
                         </div>
                     </a-col>
                 </a-row>
@@ -38,6 +38,9 @@
 
 <script setup>
 import badgeLogo from '@/static/badge.png';
+import { useLoginPage } from '@/composables/useLoginPage';
+
+const { form, submitting, submitLogin, goToRegister } = useLoginPage();
 </script>
 
 <style scoped>

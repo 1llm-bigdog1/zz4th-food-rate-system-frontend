@@ -15,17 +15,17 @@
                         <p class="subtitle">创建账户后即可参与评分和查看记录。</p>
                     </a-col>
                     <a-col :xs="24" :md="13" class="right-panel">
-                        <a-input size="large" placeholder="请输入用户名" class="account-input" />
-                        <a-input size="large" placeholder="请输入邮箱" class="input-gap" />
-                        <a-input-password size="large" placeholder="请输入密码" class="password-input" />
-                        <a-input-password size="large" placeholder="请再次输入密码" class="input-gap password-input" />
+                        <a-input v-model:value="form.username" size="large" placeholder="请输入用户名" class="account-input" />
+                        <a-input v-model:value="form.email" size="large" placeholder="请输入邮箱（选填）" class="input-gap" />
+                        <a-input-password v-model:value="form.password" size="large" placeholder="请输入密码" class="password-input" />
+                        <a-input-password v-model:value="form.confirmPassword" size="large" placeholder="请再次输入密码" class="input-gap password-input" @pressEnter="submitRegister" />
                         <div class="captcha-placeholder">
                             <span class="captcha-title">人机验证预留区域</span>
                             <span class="captcha-hint">后续可接入滑块或图形验证码组件</span>
                         </div>
                         <div class="actions">
-                            <a-button type="link" class="create-btn">已有账号，去登录</a-button>
-                            <a-button type="primary" shape="round" size="large" class="next-btn">注册</a-button>
+                            <a-button type="link" class="create-btn" @click="goToLogin">已有账号，去登录</a-button>
+                            <a-button type="primary" shape="round" size="large" class="next-btn" :loading="submitting" @click="submitRegister">注册</a-button>
                         </div>
                     </a-col>
                 </a-row>
@@ -36,6 +36,9 @@
 
 <script setup>
 import badgeLogo from '@/static/badge.png';
+import { useRegisterPage } from '@/composables/useRegisterPage';
+
+const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
 </script>
 
 <style scoped>

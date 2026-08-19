@@ -66,6 +66,7 @@
             :open="ratingModalVisible"
             :title="ratingModalTitle"
             :rating-value="ratingValue"
+            :loading="submitting"
             :submit-text="text.submitRating"
             @update:ratingValue="updateRatingValue"
             @cancel="closeRatingModal"
@@ -76,6 +77,7 @@
             :open="editModalVisible"
             :title="editModalTitle"
             :form="editForm"
+            :loading="submitting"
             :floor-options="floorOptions"
             :window-options="windowOptions"
             :upload-image-text="text.uploadImage"
@@ -115,6 +117,7 @@ const {
     ratingModalVisible,
     ratingModalTitle,
     ratingValue,
+    submitting,
     updateRatingValue,
     closeRatingModal,
     submitRating,

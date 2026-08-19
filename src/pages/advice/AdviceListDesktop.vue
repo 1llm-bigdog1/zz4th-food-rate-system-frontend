@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="submit-row">
-                    <a-button type="primary" size="large" @click="submitAdvice">{{ text.submit }}</a-button>
+                    <a-button type="primary" size="large" :loading="submitting" @click="submitAdvice">{{ text.submit }}</a-button>
                 </div>
             </div>
         </div>
@@ -87,6 +87,7 @@ import { useAdviceListPage } from '@/composables/useAdviceListPage';
 const {
     text,
     form,
+    submitting,
     visibleAdvices,
     hasMore,
     getUserInitial,

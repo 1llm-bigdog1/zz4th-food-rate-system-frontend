@@ -48,15 +48,18 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { message } from 'ant-design-vue';
-import { fetchSupplementReviews, reviewSupplementInfo } from '@/api/admin';
+import { fetchPendingSupplementReviews, fetchSupplementReviews, reviewSupplementInfo } from '@/api/admin';
 
 const pendingReviews = ref([]);
 const reviewedReviews = ref([]);
 
 onMounted(async () => {
-    const result = await fetchSupplementReviews();
-    pendingReviews.value = result.pending || [];
-    reviewedReviews.value = result.reviewed || [];
+    const [pendingResult, reviewedResult] = await Promise.all([
+        fetchPendingSupplementReviews(),
+        fetchSupplementReviews(),
+    ]);
+    pendingReviews.value = pendingResult.pending || [];
+    reviewedReviews.value = reviewedResult.reviewed || [];
 });
 
 const handleReview = async (item, approved) => {

@@ -20,9 +20,16 @@
         <a-drawer v-model:open="open" placement="right" :closable="false" width="82vw" class="mobile-drawer">
             <div class="drawer-top">
                 <div class="drawer-brand">{{ text.brandTitle }}</div>
-                <a-button type="text" @click="open = false">
-                    <close-outlined />
-                </a-button>
+                <div class="drawer-user">
+                    <a-avatar size="large" :src="avatarPath || undefined">
+                        <template #icon>
+                            <UserOutlined />
+                        </template>
+                    </a-avatar>
+                    <a-button type="text" @click="open = false">
+                        <close-outlined />
+                    </a-button>
+                </div>
             </div>
 
             <div class="drawer-nav">
@@ -36,6 +43,17 @@
                     <component :is="item.icon" />
                     <span>{{ item.label }}</span>
                 </router-link>
+            </div>
+
+            <div class="drawer-auth">
+                <template v-if="isLoggedIn">
+                    <router-link to="/account" class="drawer-link" @click="open = false">个人中心</router-link>
+                    <a-button type="text" block class="drawer-logout" @click="handleLogout">退出登录</a-button>
+                </template>
+                <template v-else>
+                    <router-link to="/login" class="drawer-link" @click="open = false">登录</router-link>
+                    <router-link to="/register" class="drawer-link" @click="open = false">注册</router-link>
+                </template>
             </div>
         </a-drawer>
     </div>
@@ -52,11 +70,14 @@ import {
     MessageOutlined,
     SettingOutlined,
     TrophyOutlined,
+    UserOutlined,
 } from '@ant-design/icons-vue';
 import badgeLogo from '@/static/badge.png';
 import { basicLayoutText, globalHeaderText } from '@/models/text';
+import { useGlobalHeader } from '@/composables/useGlobalHeader';
 
 const open = ref(false);
+const { isLoggedIn, avatarPath, handleLogout } = useGlobalHeader();
 
 const text = {
     ...globalHeaderText,
@@ -116,6 +137,12 @@ const menuItems = [
     line-height: 1.5;
 }
 
+.drawer-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .drawer-nav {
     display: flex;
     flex-direction: column;
@@ -132,5 +159,14 @@ const menuItems = [
     color: #202124;
     text-decoration: none;
     background: #f8f9fa;
+}
+
+.drawer-auth {
+    margin-top: 16px;
+}
+
+.drawer-logout {
+    text-align: left;
+    justify-content: flex-start;
 }
 </style>

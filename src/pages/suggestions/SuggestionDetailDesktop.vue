@@ -37,7 +37,7 @@
                 <a-textarea v-model:value="replyContent" :rows="4" :placeholder="text.replyPlaceholder" />
                 <div class="reply-editor-actions">
                     <a-button @click="cancelReply">{{ text.cancelReply }}</a-button>
-                    <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                    <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
                                 <a-textarea v-model:value="replyContent" :rows="4" :placeholder="text.replyPlaceholder" />
                                 <div class="reply-editor-actions">
                                     <a-button @click="cancelReply">{{ text.cancelReply }}</a-button>
-                                    <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                                    <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                                 </div>
                             </div>
                         </div>
@@ -93,7 +93,7 @@
 <script setup>
 import { LeftOutlined, LikeFilled } from '@ant-design/icons-vue';
 import { useSuggestionDetailPage } from '@/composables/useSuggestionDetailPage';
-const { text, currentSuggestion, pagedCommentList, commentList, replyContent, currentPage, pageSize, pageSizeOptions, getUserInitial, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
+const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
 </script>
 
 <style scoped>

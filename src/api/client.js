@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const apiClient = axios.create({
     baseURL: process.env.VUE_APP_API_BASE_URL || '/api',
+    // Cookie Session：跨域联调时也携带 HttpOnly Session Cookie（等价于 fetch 的 credentials: 'include'）。
+    withCredentials: true,
     headers: {
         Accept: 'application/json',
     },

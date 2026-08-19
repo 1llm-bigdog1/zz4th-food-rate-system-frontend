@@ -10,11 +10,13 @@ import { useRouter } from 'vue-router';
 import Suggestion from '@/models/Suggestion';
 import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
-import { submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 // 食堂建议列表页的桌面端和移动端共享逻辑。
 export const useSuggestionListPage = () => {
     const router = useRouter();
+    const { ensureLoggedIn } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -41,6 +43,7 @@ export const useSuggestionListPage = () => {
     const form = ref({
         comment: '',
     });
+    const submitting = ref(false);
 
     const getUserInitial = (userId) => userId.slice(0, 1);
 
@@ -58,6 +61,9 @@ export const useSuggestionListPage = () => {
     };
 
     const submitSuggestion = async () => {
+        if (submitting.value) {
+            return;
+        }
         const cleanComment = form.value.comment.trim();
 
         if (!cleanComment) {
@@ -65,9 +71,27 @@ export const useSuggestionListPage = () => {
             return;
         }
 
-        const reviewResult = await submitContentForReview({ type: 'suggestion', comment: cleanComment });
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
 
-        if (reviewResult.approved) {
+        submitting.value = true;
+        try {
+            const reviewResult = await submitContentForReview({ type: 'suggestion', comment: cleanComment });
+            const status = getReviewStatus(reviewResult);
+            if (status === 'rejected') {
+                message.error('内容未通过审核，无法显示');
+                return;
+            }
+            if (status === 'pending') {
+                message.info('内容已提交，审核通过后显示');
+                return;
+            }
+            if (status !== 'approved') {
+                message.error('提交失败，请稍后重试');
+                return;
+            }
+
             const newSuggestion = new Suggestion(
                 Date.now(),
                 text.myUserName,
@@ -78,16 +102,18 @@ export const useSuggestionListPage = () => {
             );
             suggestions.value.unshift(newSuggestion);
             await putRecord(STORES.suggestions, newSuggestion);
+            visibleCount.value = Math.max(visibleCount.value, pageSize);
+            form.value.comment = '';
+            message.success(text.submitSuccess);
+        } finally {
+            submitting.value = false;
         }
-
-        visibleCount.value = Math.max(visibleCount.value, pageSize);
-        form.value.comment = '';
-        message.success(text.submitSuccess);
     };
 
     return {
         text,
         form,
+        submitting,
         visibleSuggestions,
         hasMore,
         getUserInitial,

@@ -11,7 +11,7 @@
                 <a-rate :value="ratingValue" allow-half :tooltips="tooltips" @update:value="onUpdateRating" />
                 <span class="rating-desc">{{ ratingDescText }}</span>
             </div>
-            <a-button type="primary" @click="$emit('submit')">{{ submitText }}</a-button>
+            <a-button type="primary" :loading="loading" @click="$emit('submit')">{{ submitText }}</a-button>
         </div>
     </a-modal>
 </template>
@@ -25,6 +25,7 @@ export default {
         open: { type: Boolean, default: false },
         title: { type: String, default: '' },
         ratingValue: { type: Number, default: 0 },
+        loading: { type: Boolean, default: false },
         submitText: { type: String, default: ratingModalText.submitText },
         tooltips: {
             type: Array,

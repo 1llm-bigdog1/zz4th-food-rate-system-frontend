@@ -10,11 +10,14 @@ import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/reset.css';
 import router from './router';
 import { clearTestData, initLocalData } from '@/db/indexedDB';
+import { setDebugReviewStatus } from '@/api/review';
 
 // 开发环境暴露测试数据清理入口，便于在浏览器控制台验证：
 // 调用 window.__LOCAL_DB.clearTestData() 只会删除首次初始化写入的测试数据。
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
     window.__LOCAL_DB = { clearTestData };
+    // 开发调试：模拟审核结果 approved / rejected / pending。
+    window.__REVIEW_DEBUG = { setStatus: setDebugReviewStatus };
 }
 
 // 应用入口：统一挂载 UI 库与路由。

@@ -11,13 +11,16 @@ import Selection from '@/models/Selection';
 import Position from '@/models/Position';
 import { getCached, putRecord, STORES } from '@/db/indexedDB';
 import { selectionListText, sharedText } from '@/models/text';
-import { submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { pushRate } from '@/api/pushRate';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 // 严选列表页相对复杂，包含分享表单和评分弹窗。
 // 这里把业务状态全部抽离，保证双端行为完全一致。
 export const useSelectionListPage = () => {
     const router = useRouter();
+    const { ensureLoggedIn } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -38,8 +41,10 @@ export const useSelectionListPage = () => {
         price: null,
         positions: [{ floor: null, window: null }],
     });
+    const submitting = ref(false);
 
     const ratingModalVisible = ref(false);
+    const ratingTargetId = ref(null);
     const ratingTargetName = ref('');
     const ratingValue = ref(0);
     const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingTargetName.value}${text.rateTitleSuffix}`);
@@ -74,6 +79,7 @@ export const useSelectionListPage = () => {
     };
 
     const openRatingModal = (item) => {
+        ratingTargetId.value = item.id;
         ratingTargetName.value = item.user_id;
         ratingValue.value = item.rate || 0;
         ratingModalVisible.value = true;
@@ -87,11 +93,39 @@ export const useSelectionListPage = () => {
         ratingModalVisible.value = false;
     };
 
-    const submitRating = () => {
-        ratingModalVisible.value = false;
+    const submitRating = async () => {
+        if (submitting.value) {
+            return;
+        }
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        if (!ratingValue.value) {
+            message.warning('请先选择评分');
+            return;
+        }
+        submitting.value = true;
+        try {
+            const result = await pushRate({
+                targetType: 'selection',
+                targetId: ratingTargetId.value,
+                score: ratingValue.value,
+            });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '评分提交失败，请稍后重试');
+                return;
+            }
+            ratingModalVisible.value = false;
+            message.success(text.submitRating);
+        } finally {
+            submitting.value = false;
+        }
     };
 
     const submitSelection = async () => {
+        if (submitting.value) {
+            return;
+        }
         const cleanComment = form.value.comment.trim();
         const validPositions = form.value.positions.filter((item) => item.floor && item.window);
 
@@ -100,14 +134,32 @@ export const useSelectionListPage = () => {
             return;
         }
 
-        const reviewResult = await submitContentForReview({
-            type: 'selection',
-            comment: cleanComment,
-            price: form.value.price,
-            positions: validPositions,
-        });
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
 
-        if (reviewResult.approved) {
+        submitting.value = true;
+        try {
+            const reviewResult = await submitContentForReview({
+                type: 'selection',
+                comment: cleanComment,
+                price: form.value.price,
+                positions: validPositions,
+            });
+            const status = getReviewStatus(reviewResult);
+            if (status === 'rejected') {
+                message.error('内容未通过审核，无法显示');
+                return;
+            }
+            if (status === 'pending') {
+                message.info('内容已提交，审核通过后显示');
+                return;
+            }
+            if (status !== 'approved') {
+                message.error('提交失败，请稍后重试');
+                return;
+            }
+
             const newSelection = new Selection(
                 Date.now(),
                 text.myUserName,
@@ -119,11 +171,12 @@ export const useSelectionListPage = () => {
             );
             selections.value.unshift(newSelection);
             await putRecord(STORES.selections, newSelection);
+            visibleCount.value = Math.max(visibleCount.value, pageSize);
+            resetForm();
+            message.success(text.submitSuccess);
+        } finally {
+            submitting.value = false;
         }
-
-        visibleCount.value = Math.max(visibleCount.value, pageSize);
-        resetForm();
-        message.success(text.submitSuccess);
     };
 
     return {
@@ -131,6 +184,7 @@ export const useSelectionListPage = () => {
         floorOptions,
         windowOptions,
         form,
+        submitting,
         visibleSelections,
         hasMore,
         ratingModalVisible,

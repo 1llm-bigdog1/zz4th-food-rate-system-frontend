@@ -35,7 +35,7 @@
             <p class="section-subtitle">{{ text.contributeSubtitle }}</p>
             <div class="field-label">{{ text.commentTitle }}</div>
             <a-textarea v-model:value="form.comment" :rows="5" :placeholder="text.commentPlaceholder" />
-            <a-button type="primary" block class="submit-button" @click="submitAdvice">{{ text.submit }}</a-button>
+            <a-button type="primary" block class="submit-button" :loading="submitting" @click="submitAdvice">{{ text.submit }}</a-button>
         </section>
     </MobilePageShell>
 </template>
@@ -48,6 +48,7 @@ import { useAdviceListPage } from '@/composables/useAdviceListPage';
 const {
     text,
     form,
+    submitting,
     visibleAdvices,
     hasMore,
     getUserInitial,

@@ -27,7 +27,7 @@
                 <a-input-number v-model:value="localForm.price" :min="0" :step="0.5" :precision="1" style="width: 240px" :placeholder="pricePlaceholder" />
             </div>
 
-            <a-button type="primary" @click="onSubmit">{{ submitText }}</a-button>
+            <a-button type="primary" :loading="loading" @click="onSubmit">{{ submitText }}</a-button>
         </div>
     </a-modal>
 </template>
@@ -50,6 +50,7 @@ export default {
         floorPlaceholder: { type: String, default: supplementInfoModalText.floorPlaceholder },
         windowPlaceholder: { type: String, default: supplementInfoModalText.windowPlaceholder },
         pricePlaceholder: { type: String, default: supplementInfoModalText.pricePlaceholder },
+        loading: { type: Boolean, default: false },
         submitText: { type: String, default: supplementInfoModalText.submitText },
     },
     emits: ['cancel', 'submit'],

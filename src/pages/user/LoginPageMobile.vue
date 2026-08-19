@@ -8,16 +8,16 @@
     <MobilePageShell title="登录" subtitle="在移动端以更紧凑的单列方式完成登录。">
         <section class="auth-card">
             <img :src="badgeLogo" alt="校徽" class="logo-image" />
-            <a-input size="large" placeholder="请输入你的用户名" />
-            <a-input-password size="large" placeholder="请输入你的密码" />
+            <a-input v-model:value="form.account" size="large" placeholder="请输入你的用户名" @pressEnter="submitLogin" />
+            <a-input-password v-model:value="form.password" size="large" placeholder="请输入你的密码" @pressEnter="submitLogin" />
             <div class="captcha-placeholder">
                 <span class="captcha-title">人机验证预留区域</span>
                 <span class="captcha-hint">后续可接入验证码组件</span>
             </div>
             <a-button type="link" class="text-link">忘记了密码？</a-button>
             <a-button type="link" class="text-link forum-link">校园论坛授权登录</a-button>
-            <a-button type="primary" block size="large">登录</a-button>
-            <a-button type="link" class="text-link">注册新账户</a-button>
+            <a-button type="primary" block size="large" :loading="submitting" @click="submitLogin">登录</a-button>
+            <a-button type="link" class="text-link" @click="goToRegister">注册新账户</a-button>
         </section>
     </MobilePageShell>
 </template>
@@ -25,6 +25,9 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import badgeLogo from '@/static/badge.png';
+import { useLoginPage } from '@/composables/useLoginPage';
+
+const { form, submitting, submitLogin, goToRegister } = useLoginPage();
 </script>
 
 <style scoped>

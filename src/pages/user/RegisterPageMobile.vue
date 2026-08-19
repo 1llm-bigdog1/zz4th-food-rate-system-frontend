@@ -8,16 +8,16 @@
     <MobilePageShell title="注册" subtitle="移动端使用单列注册表单，减少横向拥挤。">
         <section class="auth-card">
             <img :src="badgeLogo" alt="校徽" class="logo-image" />
-            <a-input size="large" placeholder="请输入用户名" />
-            <a-input size="large" placeholder="请输入邮箱" />
-            <a-input-password size="large" placeholder="请输入密码" />
-            <a-input-password size="large" placeholder="请再次输入密码" />
+            <a-input v-model:value="form.username" size="large" placeholder="请输入用户名" />
+            <a-input v-model:value="form.email" size="large" placeholder="请输入邮箱（选填）" />
+            <a-input-password v-model:value="form.password" size="large" placeholder="请输入密码" />
+            <a-input-password v-model:value="form.confirmPassword" size="large" placeholder="请再次输入密码" @pressEnter="submitRegister" />
             <div class="captcha-placeholder">
                 <span class="captcha-title">人机验证预留区域</span>
                 <span class="captcha-hint">后续可接入验证码组件</span>
             </div>
-            <a-button type="primary" block size="large">注册</a-button>
-            <a-button type="link" class="text-link">已有账号，去登录</a-button>
+            <a-button type="primary" block size="large" :loading="submitting" @click="submitRegister">注册</a-button>
+            <a-button type="link" class="text-link" @click="goToLogin">已有账号，去登录</a-button>
         </section>
     </MobilePageShell>
 </template>
@@ -25,6 +25,9 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import badgeLogo from '@/static/badge.png';
+import { useRegisterPage } from '@/composables/useRegisterPage';
+
+const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
 </script>
 
 <style scoped>

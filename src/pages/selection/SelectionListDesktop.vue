@@ -141,7 +141,7 @@
                 </div>
 
                 <div class="submit-row">
-                    <a-button type="primary" size="large" @click="submitSelection">{{ text.submit }}</a-button>
+                    <a-button type="primary" size="large" :loading="submitting" @click="submitSelection">{{ text.submit }}</a-button>
                 </div>
             </div>
         </div>
@@ -150,6 +150,7 @@
             :open="ratingModalVisible"
             :title="ratingModalTitle"
             :rating-value="ratingValue"
+            :loading="submitting"
             :submit-text="text.submitRating"
             @update:ratingValue="updateRatingValue"
             @cancel="closeRatingModal"
@@ -167,6 +168,7 @@ const {
     floorOptions,
     windowOptions,
     form,
+    submitting,
     visibleSelections,
     hasMore,
     ratingModalVisible,

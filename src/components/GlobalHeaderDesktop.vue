@@ -22,11 +22,23 @@
                 </a-menu-item>
             </a-menu>
 
-            <a-avatar size="large" class="header-avatar">
-                <template #icon>
-                    <UserOutlined />
+            <a-dropdown>
+                <a-avatar size="large" class="header-avatar" :src="avatarPath || undefined">
+                    <template #icon>
+                        <UserOutlined />
+                    </template>
+                </a-avatar>
+                <template #overlay>
+                    <a-menu v-if="isLoggedIn">
+                        <a-menu-item key="account" @click="goToAccount">个人中心</a-menu-item>
+                        <a-menu-item key="logout" @click="handleLogout">退出登录</a-menu-item>
+                    </a-menu>
+                    <a-menu v-else>
+                        <a-menu-item key="login" @click="goToLogin">登录</a-menu-item>
+                        <a-menu-item key="register" @click="goToRegister">注册</a-menu-item>
+                    </a-menu>
                 </template>
-            </a-avatar>
+            </a-dropdown>
         </div>
     </div>
 </template>
@@ -44,8 +56,10 @@ import {
 } from '@ant-design/icons-vue';
 import badgeLogo from '@/static/badge.png';
 import { globalHeaderText as text } from '@/models/text';
+import { useGlobalHeader } from '@/composables/useGlobalHeader';
 
 const current = ref(['dishOverview']);
+const { isLoggedIn, avatarPath, goToLogin, goToRegister, goToAccount, handleLogout } = useGlobalHeader();
 
 const menuItems = [
     { key: 'dishOverview', label: text.dishOverview, icon: AppstoreOutlined, to: '/dishes' },

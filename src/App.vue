@@ -12,7 +12,16 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import BasicLayout from './layouts/BasicLayout.vue';
+import { useSession } from '@/composables/useSession';
+
+const { restoreSession } = useSession();
+
+onMounted(() => {
+    // 启动时恢复登录状态：GET /api/user 携带 Session Cookie，HTTP 401 视为未登录并进入登录页。
+    restoreSession();
+});
 </script>
 
 <style>

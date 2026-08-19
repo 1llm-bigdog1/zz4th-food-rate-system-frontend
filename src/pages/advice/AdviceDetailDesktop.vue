@@ -53,7 +53,7 @@
                 <a-textarea v-model:value="replyContent" :rows="4" :placeholder="text.replyPlaceholder" />
                 <div class="reply-editor-actions">
                     <a-button @click="cancelReply">{{ text.cancelReply }}</a-button>
-                    <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                    <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                 </div>
             </div>
         </div>
@@ -109,7 +109,7 @@
                                 <a-textarea v-model:value="replyContent" :rows="4" :placeholder="text.replyPlaceholder" />
                                 <div class="reply-editor-actions">
                                     <a-button @click="cancelReply">{{ text.cancelReply }}</a-button>
-                                    <a-button type="primary" @click="submitReply">{{ text.submit }}</a-button>
+                                    <a-button type="primary" :loading="submitting" @click="submitReply">{{ text.submit }}</a-button>
                                 </div>
                             </div>
                         </div>
@@ -149,6 +149,7 @@ const {
     goBack,
     openReplyBox,
     cancelReply,
+    submitting,
     toggleAdviceLike,
     toggleCommentLike,
     submitReply,
