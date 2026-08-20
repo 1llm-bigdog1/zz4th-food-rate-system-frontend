@@ -23,8 +23,15 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 // 应用入口：统一挂载 UI 库与路由。
 // 先初始化本地 IndexedDB（首次创建时写入测试数据），再挂载应用。
 initLocalData().finally(() => {
-    createApp(App)
+    const app = createApp(App)
         .use(Antd)
-        .use(router)
-        .mount('#app');
+        .use(router);
+    let errorPageNavigated = false;
+    app.config.errorHandler = () => {
+        if (!errorPageNavigated) {
+            errorPageNavigated = true;
+            router.push('/500');
+        }
+    };
+    app.mount('#app');
 });

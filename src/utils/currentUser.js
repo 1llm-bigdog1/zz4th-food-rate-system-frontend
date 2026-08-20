@@ -41,3 +41,22 @@ export const fetchCurrentUser = async () => {
         throw error;
     }
 };
+
+/**
+ * 获取当前用户的身份信息（userId / username）。
+ * 后端不可用或未登录时返回空身份，不抛出，供提交类参数填充。
+ */
+export const getCurrentUserIdentity = async () => {
+    try {
+        const user = await fetchCurrentUser();
+        return {
+            userId: user ? user.id : null,
+            username: user ? user.username : '',
+        };
+    } catch (error) {
+        return {
+            userId: null,
+            username: '',
+        };
+    }
+};

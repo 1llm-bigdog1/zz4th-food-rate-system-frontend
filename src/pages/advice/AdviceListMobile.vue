@@ -14,9 +14,12 @@
                 @click="goToAdviceDetail(item)"
             >
                 <div class="card-top">
-                    <div class="author-chip">{{ getUserInitial(item.user_id) }}</div>
+                    <div class="author-chip">
+                        <img v-if="displayAvatar(item.user_id)" :src="displayAvatar(item.user_id)" alt="" class="chip-avatar" />
+                        <span v-else>{{ getUserInitial(item.user_id) }}</span>
+                    </div>
                     <div class="card-headings">
-                        <div class="user-name">{{ item.user_id }}</div>
+                        <div class="user-name">{{ displayUser(item.user_id).username }}</div>
                         <div class="meta-date">{{ item.date }}</div>
                     </div>
                     <button type="button" class="like-button" @click.stop="toggleLike(item)">
@@ -52,6 +55,8 @@ const {
     visibleAdvices,
     hasMore,
     getUserInitial,
+    displayUser,
+    displayAvatar,
     loadMore,
     goToAdviceDetail,
     toggleLike,
@@ -91,6 +96,13 @@ const {
     background: #fff7e6;
     color: #d48806;
     font-weight: 700;
+}
+
+.chip-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .card-headings {

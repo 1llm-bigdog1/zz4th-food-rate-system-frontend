@@ -8,10 +8,14 @@ import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import Dish from '@/models/Dish';
 import noImage from '@/static/no_image.png';
-import { getCached, putRecord, removeRecord, STORES } from '@/db/indexedDB';
+import { putRecord, removeRecord, STORES } from '@/db/indexedDB';
 import { dishesListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
+import { createDish, deleteDish as deleteDishRequest } from '@/api/admin';
+import { resolveUploadedImage } from '@/api/upload';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
+import { getMenu } from '@/api/getMenu';
+import { useSyncedData } from '@/composables/useSyncedData';
 
 export const useDishesManagementPage = () => {
     const text = {
@@ -39,7 +43,7 @@ export const useDishesManagementPage = () => {
         submitModify: sharedText.submitModify,
     };
 
-    const dishes = ref(getCached(STORES.dishes));
+    const { data: dishes } = useSyncedData(STORES.dishes, getMenu);
     const searchInput = ref('');
     const searchKeyword = ref('');
     const selectedFloor = ref(undefined);
@@ -162,10 +166,12 @@ export const useDishesManagementPage = () => {
             editModalVisible.value = false;
             return;
         }
+        const image = await resolveUploadedImage(nextForm.fileList, '');
         await submitContentForReview({
             type: 'dish-management-modify',
             dishId: editDishId.value,
             dishName: editDishName.value,
+            image,
             ...nextForm,
         });
         const targetDish = dishes.value.find((item) => item.id === editDishId.value);
@@ -175,7 +181,7 @@ export const useDishesManagementPage = () => {
                 window: nextForm.window ?? targetDish.position.window,
             };
             targetDish.price = nextForm.price ?? targetDish.price;
-            targetDish.image = getImageFromFileList(nextForm.fileList, targetDish.image);
+            targetDish.image = image || getImageFromFileList(nextForm.fileList, targetDish.image);
             await putRecord(STORES.dishes, targetDish);
         }
         editForm.value = nextForm;
@@ -199,12 +205,24 @@ export const useDishesManagementPage = () => {
     };
 
     const submitAdd = async (nextForm) => {
+        const image = await resolveUploadedImage(nextForm.fileList, noImage);
+        const result = await createDish({
+            name: nextForm.name.trim(),
+            price: nextForm.price ?? 0,
+            stair: nextForm.stair ?? 1,
+            window: nextForm.window ?? 1,
+            image,
+        });
+        if (!result || result.success === false) {
+            message.error((result && result.message) || '\u6dfb\u52a0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
+            return;
+        }
         const nextId = dishes.value.length ? Math.max(...dishes.value.map((dish) => dish.id)) + 1 : 1;
         const newDish = new Dish(
             nextId,
             nextForm.name.trim(),
             { stair: nextForm.stair ?? 1, window: nextForm.window ?? 1 },
-            getImageFromFileList(nextForm.fileList, noImage),
+            image || getImageFromFileList(nextForm.fileList, noImage),
             0,
             nextForm.price ?? 0,
         );
@@ -216,6 +234,11 @@ export const useDishesManagementPage = () => {
     };
 
     const deleteDish = async (record) => {
+        const result = await deleteDishRequest(record.id);
+        if (!result || result.success === false) {
+            message.error((result && result.message) || '\u5220\u9664\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
+            return;
+        }
         const index = dishes.value.findIndex((dish) => dish.id === record.id);
         if (index >= 0) {
             dishes.value.splice(index, 1);

@@ -4,14 +4,19 @@
  * 2. 该文件位于 src\composables 目录下，是当前模块的重要基础脚本之一。
  * 3. 维护这类文件时，优先保证对外暴露的数据、计算属性和事件接口稳定，避免影响多个视图层。
  */
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import Suggestion from '@/models/Suggestion';
-import { getCached, putRecord, STORES } from '@/db/indexedDB';
+import { putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { toggleLike as toggleLikeRequest } from '@/api/like';
 import { useLoginGuard } from '@/composables/useLoginGuard';
+import { getSuggestion } from '@/api/getSuggestion';
+import { useSyncedData } from '@/composables/useSyncedData';
+import { getCurrentUserIdentity } from '@/utils/currentUser';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
 
 // 食堂建议列表页的桌面端和移动端共享逻辑。
 export const useSuggestionListPage = () => {
@@ -34,7 +39,7 @@ export const useSuggestionListPage = () => {
         myUserName: '我',
     };
 
-    const suggestions = ref(getCached(STORES.suggestions));
+    const { data: suggestions } = useSyncedData(STORES.suggestions, getSuggestion);
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleSuggestions = computed(() => suggestions.value.slice(0, visibleCount.value));
@@ -45,7 +50,11 @@ export const useSuggestionListPage = () => {
     });
     const submitting = ref(false);
 
-    const getUserInitial = (userId) => userId.slice(0, 1);
+    const getUserInitial = (userId) => getDisplayInitial(userId);
+
+    onMounted(() => {
+        ensureCurrentUserRegistered();
+    });
 
     const loadMore = () => {
         visibleCount.value = Math.min(visibleCount.value + pageSize, suggestions.value.length);
@@ -56,8 +65,21 @@ export const useSuggestionListPage = () => {
     };
 
     const toggleLike = async (item) => {
-        item.like += 1;
-        await putRecord(STORES.suggestions, item);
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        try {
+            const { userId, username } = await getCurrentUserIdentity();
+            const result = await toggleLikeRequest({ targetType: 'suggestion', targetId: item.id, userId, username });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
+                return;
+            }
+            item.like += 1;
+            await putRecord(STORES.suggestions, item);
+        } catch (error) {
+            message.error('操作失败，请稍后重试');
+        }
     };
 
     const submitSuggestion = async () => {
@@ -77,7 +99,13 @@ export const useSuggestionListPage = () => {
 
         submitting.value = true;
         try {
-            const reviewResult = await submitContentForReview({ type: 'suggestion', comment: cleanComment });
+            const { userId, username } = await getCurrentUserIdentity();
+            const reviewResult = await submitContentForReview({
+                type: 'suggestion',
+                comment: cleanComment,
+                userId,
+                username,
+            });
             const status = getReviewStatus(reviewResult);
             if (status === 'rejected') {
                 message.error('内容未通过审核，无法显示');
@@ -94,7 +122,7 @@ export const useSuggestionListPage = () => {
 
             const newSuggestion = new Suggestion(
                 Date.now(),
-                text.myUserName,
+                userId || text.myUserName,
                 new Date().toISOString().slice(0, 10),
                 cleanComment,
                 0,
@@ -117,6 +145,8 @@ export const useSuggestionListPage = () => {
         visibleSuggestions,
         hasMore,
         getUserInitial,
+        displayUser: getDisplayUser,
+        displayAvatar: getDisplayAvatar,
         loadMore,
         goToSuggestionDetail,
         toggleLike,

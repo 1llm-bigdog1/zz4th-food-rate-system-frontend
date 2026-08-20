@@ -1,4 +1,4 @@
-import { getJson } from '@/api/client';
+import apiClient, { getJson, shouldUseMockApi } from '@/api/client';
 
 const MOCK_PENDING_SUPPLEMENT_REVIEWS = [
     {
@@ -17,8 +17,21 @@ const MOCK_PENDING_SUPPLEMENT_REVIEWS = [
     },
 ];
 
-export const verifyAdminPassword = (password) =>
-    getJson('/admin/verify-password', { password }, { success: password === 'admin123' });
+export const verifyAdminPassword = async (password) => {
+    if (shouldUseMockApi()) {
+        return { success: password === 'admin123' };
+    }
+    const response = await apiClient.post(
+        '/admin/verify-password',
+        { password },
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        },
+    );
+    return response.data;
+};
 
 export const fetchSupplementReviews = () =>
     getJson('/admin/supplement-reviews', {}, {
@@ -64,7 +77,20 @@ export const deleteDish = (id) => getJson('/admin/dish/delete', { id }, { succes
 export const fetchUserDetail = (id) =>
     getJson('/admin/user-detail', { id }, {
         success: true,
-        user: { id, username: '\u540c\u5b66A', nickname: '\u540c\u5b66A', status: '\u6b63\u5e38' },
+        user: {
+            id,
+            username: '\u540c\u5b66A',
+            avatar_path: '',
+            gender: '\u7537',
+            session: '2026\u5c4a',
+            classid: '3\u73ed',
+            nickname: '\u540c\u5b66A',
+            realname: '\u5f20\u4e09',
+            level: 3,
+            register_date: '2026-01-12',
+            rate_time: 8,
+            email: 'student@example.com',
+        },
     });
 
 /**

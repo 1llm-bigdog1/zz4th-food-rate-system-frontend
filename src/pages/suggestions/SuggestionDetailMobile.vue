@@ -9,9 +9,12 @@
         <a-button class="back-button" @click="goBack">{{ text.back }}</a-button>
         <section class="detail-card">
             <div class="card-top">
-                <div class="author-chip">{{ getUserInitial(currentSuggestion.user_id) }}</div>
+                <div class="author-chip">
+                    <img v-if="displayAvatar(currentSuggestion.user_id)" :src="displayAvatar(currentSuggestion.user_id)" alt="" class="chip-avatar" />
+                    <span v-else>{{ getUserInitial(currentSuggestion.user_id) }}</span>
+                </div>
                 <div class="card-headings">
-                    <div class="user-name">{{ currentSuggestion.user_id }}</div>
+                    <div class="user-name">{{ displayUser(currentSuggestion.user_id).username }}</div>
                     <div class="meta-date">{{ currentSuggestion.date }}</div>
                 </div>
                 <button type="button" class="like-button" @click="toggleSuggestionLike">{{ text.likeAction }} {{ currentSuggestion.like }}</button>
@@ -33,9 +36,12 @@
             <div class="mobile-list">
                 <article v-for="item in pagedCommentList" :key="item.id" class="comment-card" :style="{ marginLeft: `${item.level * 12}px` }">
                     <div class="card-top">
-                        <div class="author-chip small-chip">{{ getUserInitial(item.user_id) }}</div>
+                        <div class="author-chip small-chip">
+                            <img v-if="displayAvatar(item.user_id)" :src="displayAvatar(item.user_id)" alt="" class="chip-avatar" />
+                            <span v-else>{{ getUserInitial(item.user_id) }}</span>
+                        </div>
                         <div class="card-headings">
-                            <div class="user-name">{{ item.user_id }}</div>
+                            <div class="user-name">{{ displayUser(item.user_id).username }}</div>
                             <div class="meta-date">{{ item.date }}</div>
                         </div>
                         <button type="button" class="like-button" @click="toggleCommentLike(item.id)">{{ item.likes }}</button>
@@ -64,7 +70,7 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import { useSuggestionDetailPage } from '@/composables/useSuggestionDetailPage';
-const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
+const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, displayUser, displayAvatar, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
 </script>
 
 <style scoped>
@@ -73,6 +79,7 @@ const { text, currentSuggestion, pagedCommentList, commentList, replyContent, su
 .mobile-list { display: flex; flex-direction: column; gap: 12px; }
 .card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .author-chip { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; background: #f6ffed; color: #389e0d; font-weight: 700; }
+.chip-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .small-chip { width: 36px; height: 36px; }
 .card-headings { flex: 1; min-width: 0; }
 .user-name { color: #202124; font-size: 15px; font-weight: 700; }

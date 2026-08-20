@@ -7,12 +7,15 @@
 import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getCached, putRecord, STORES } from '@/db/indexedDB';
+import { putRecord, STORES } from '@/db/indexedDB';
 import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { pushRate } from '@/api/pushRate';
 import { useLoginGuard } from '@/composables/useLoginGuard';
+import { getSelection } from '@/api/getSelection';
+import { getSelectionComments } from '@/api/getSelectionComments';
+import { useSyncedData } from '@/composables/useSyncedData';
 
 // 严选详情页包含回复树和针对主贴/评论的评分状态。
 export const useSelectionDetailPage = () => {
@@ -39,10 +42,10 @@ export const useSelectionDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const selections = ref(getCached(STORES.selections));
+    const { data: selections } = useSyncedData(STORES.selections, getSelection);
     const routeSelectionId = Number(route.params.id);
     const currentSelection = computed(() => selections.value.find((item) => item.id === routeSelectionId) || selections.value[0]);
-    const comments = ref(getCached(STORES.selectionComments));
+    const { data: comments } = useSyncedData(STORES.selectionComments, getSelectionComments);
 
     const buildCommentTree = (items, parentId = null, level = 0) =>
         items

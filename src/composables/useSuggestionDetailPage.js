@@ -4,13 +4,19 @@
  * 2. 该文件位于 src\composables 目录下，是当前模块的重要基础脚本之一。
  * 3. 维护这类文件时，优先保证对外暴露的数据、计算属性和事件接口稳定，避免影响多个视图层。
  */
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getCached, putRecord, STORES } from '@/db/indexedDB';
+import { putRecord, STORES } from '@/db/indexedDB';
 import SuggestionComment from '@/models/SuggestionComment';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { toggleLike as toggleLikeRequest } from '@/api/like';
 import { useLoginGuard } from '@/composables/useLoginGuard';
+import { getSuggestion } from '@/api/getSuggestion';
+import { getSuggestionComments } from '@/api/getSuggestionComments';
+import { useSyncedData } from '@/composables/useSyncedData';
+import { getCurrentUserIdentity } from '@/utils/currentUser';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
 
 // 食堂建议详情页与新品建议详情页结构一致，但数据源不同。
 export const useSuggestionDetailPage = () => {
@@ -38,10 +44,10 @@ export const useSuggestionDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const suggestions = ref(getCached(STORES.suggestions));
+    const { data: suggestions } = useSyncedData(STORES.suggestions, getSuggestion);
     const currentSuggestionId = Number(route.params.id);
     const currentSuggestion = computed(() => suggestions.value.find((item) => item.id === currentSuggestionId) || suggestions.value[0]);
-    const comments = ref(getCached(STORES.suggestionComments));
+    const { data: comments } = useSyncedData(STORES.suggestionComments, getSuggestionComments);
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
     const submitting = ref(false);
@@ -72,8 +78,12 @@ export const useSuggestionDetailPage = () => {
         return commentList.value.slice(start, start + pageSize.value);
     });
 
-    const getUserInitial = (userId) => userId.slice(0, 1);
+    const getUserInitial = (userId) => getDisplayInitial(userId);
     const isReplyingTo = (type, id) => activeReplyTarget.value.type === type && activeReplyTarget.value.id === id;
+
+    onMounted(() => {
+        ensureCurrentUserRegistered();
+    });
 
     const goBack = () => {
         router.back();
@@ -90,15 +100,52 @@ export const useSuggestionDetailPage = () => {
     };
 
     const toggleSuggestionLike = async () => {
-        currentSuggestion.value.like += 1;
-        await putRecord(STORES.suggestions, currentSuggestion.value);
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        try {
+            const { userId, username } = await getCurrentUserIdentity();
+            const result = await toggleLikeRequest({
+                targetType: 'suggestion',
+                targetId: currentSuggestion.value.id,
+                userId,
+                username,
+            });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
+                return;
+            }
+            currentSuggestion.value.like += 1;
+            await putRecord(STORES.suggestions, currentSuggestion.value);
+        } catch (error) {
+            message.error('操作失败，请稍后重试');
+        }
     };
 
     const toggleCommentLike = async (commentId) => {
         const target = comments.value.find((item) => item.id === commentId);
-        if (target) {
+        if (!target) {
+            return;
+        }
+        if (!(await ensureLoggedIn())) {
+            return;
+        }
+        try {
+            const { userId, username } = await getCurrentUserIdentity();
+            const result = await toggleLikeRequest({
+                targetType: 'suggestion-comment',
+                targetId: commentId,
+                userId,
+                username,
+            });
+            if (result && result.success === false) {
+                message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
+                return;
+            }
             target.likes += 1;
             await putRecord(STORES.suggestionComments, target);
+        } catch (error) {
+            message.error('操作失败，请稍后重试');
         }
     };
 
@@ -119,11 +166,14 @@ export const useSuggestionDetailPage = () => {
 
         submitting.value = true;
         try {
+            const { userId, username } = await getCurrentUserIdentity();
             const reviewResult = await submitContentForReview({
                 type: 'suggestion-comment',
                 suggestionId: currentSuggestion.value.id,
                 reply: cleanReply,
                 target: activeReplyTarget.value,
+                userId,
+                username,
             });
             const status = getReviewStatus(reviewResult);
             if (status === 'rejected') {
@@ -141,7 +191,7 @@ export const useSuggestionDetailPage = () => {
 
             const newComment = new SuggestionComment(
                 `${currentSuggestion.value.id}-comment-${Date.now()}`,
-                text.myUserName,
+                userId || text.myUserName,
                 new Date().toISOString().slice(0, 10),
                 currentSuggestion.value.id,
                 cleanReply,
@@ -175,6 +225,8 @@ export const useSuggestionDetailPage = () => {
         pageSize,
         pageSizeOptions,
         getUserInitial,
+        displayUser: getDisplayUser,
+        displayAvatar: getDisplayAvatar,
         isReplyingTo,
         goBack,
         openReplyBox,

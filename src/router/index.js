@@ -19,6 +19,7 @@ import SuggestionList from '../pages/suggestions/SuggestionList.vue';
 import SuggestionDetail from '../pages/suggestions/SuggestionDetail.vue';
 import DishesManagement from '../pages/management/DishesManagement.vue';
 import AdminChannel from '../pages/management/AdminChannel.vue';
+import ErrorPage from '../pages/ErrorPage.vue';
 
 // 路由表：按页面模块分组，便于后续拆分子路由。
 const routes = [
@@ -91,6 +92,36 @@ const routes = [
     path: '/admin',
     name: 'AdminChannel',
     component: AdminChannel
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: ErrorPage,
+    props: { code: 404 }
+  },
+  {
+    path: '/403',
+    name: 'Forbidden',
+    component: ErrorPage,
+    props: { code: 403 }
+  },
+  {
+    path: '/500',
+    name: 'ServerError',
+    component: ErrorPage,
+    props: { code: 500 }
+  },
+  {
+    path: '/network-error',
+    name: 'NetworkError',
+    component: ErrorPage,
+    props: { code: 'network' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'CatchAll',
+    component: ErrorPage,
+    props: { code: 404 }
   }
 ];
 

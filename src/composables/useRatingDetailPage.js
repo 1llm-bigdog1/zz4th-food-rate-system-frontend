@@ -5,8 +5,10 @@
  * 3. 维护这类文件时，优先保证对外暴露的数据、计算属性和事件接口稳定，避免影响多个视图层。
  */
 import { computed, ref, watch } from 'vue';
-import { getCached, STORES } from '@/db/indexedDB';
+import { STORES } from '@/db/indexedDB';
 import { ratingDetailText, sharedText } from '@/models/text';
+import { getMenu } from '@/api/getMenu';
+import { useSyncedData } from '@/composables/useSyncedData';
 
 // 排行榜页的桌面端和移动端共用这一份数据组织逻辑。
 // 这样以后如果计算规则或分页规则变化，只需要修改这里。
@@ -20,7 +22,7 @@ export const useRatingDetailPage = () => {
         pageSizeSuffix: '条',
     };
 
-    const dishes = ref(getCached(STORES.dishes));
+    const { data: dishes } = useSyncedData(STORES.dishes, getMenu);
     const alpha = ref(0.5);
 
     watch(alpha, (value) => {

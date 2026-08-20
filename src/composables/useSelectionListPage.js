@@ -9,12 +9,14 @@ import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import Selection from '@/models/Selection';
 import Position from '@/models/Position';
-import { getCached, putRecord, STORES } from '@/db/indexedDB';
+import { putRecord, STORES } from '@/db/indexedDB';
 import { selectionListText, sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { pushRate } from '@/api/pushRate';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { useLoginGuard } from '@/composables/useLoginGuard';
+import { getSelection } from '@/api/getSelection';
+import { useSyncedData } from '@/composables/useSyncedData';
 
 // 严选列表页相对复杂，包含分享表单和评分弹窗。
 // 这里把业务状态全部抽离，保证双端行为完全一致。
@@ -27,7 +29,7 @@ export const useSelectionListPage = () => {
         ...selectionListText,
     };
 
-    const selections = ref(getCached(STORES.selections));
+    const { data: selections } = useSyncedData(STORES.selections, getSelection);
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleSelections = computed(() => selections.value.slice(0, visibleCount.value));

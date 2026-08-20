@@ -42,11 +42,13 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
 - 前端统一入口：`src/api/client.js`
 - 参数传递：全部使用 query params
 - 成功字段：建议统一返回 `success: true`
+- 错误与状态码：业务失败返回 `200 + { "success": false, "message": ... }`；未登录/会话失效统一返回 **HTTP 401**；无权限返回 **HTTP 403**；服务器错误返回 **HTTP 5xx**；网络不可达按前端网络错误处理。
 
 ### 管理员密码验证
 
-- 接口：`GET /admin/verify-password`
+- 接口：`POST /admin/verify-password`（配合 baseURL `/api`，实际请求 `/api/admin/verify-password`）
 - 前端方法：`verifyAdminPassword(password)`
+- 请求体格式：`application/json`，密码放在 JSON body 中，不得放入 URL。
 - 参数：
 
 | 参数 | 类型 | 必填 | 说明 |
@@ -60,6 +62,8 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
   "success": true
 }
 ```
+
+- 管理端鉴权：管理端接口复用登录用户 Session，后端按 `role=admin` 鉴权；非管理员访问 `/admin/*` 返回 HTTP 403。
 
 ### 补充信息审核列表
 
@@ -170,12 +174,14 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
 
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| type | string | 是 | 内容类型，如 `selection`、`selection-comment`、`advice`、`advice-comment`、`suggestion`、`suggestion-comment`、`dish-supplement` |
+| type | string | 是 | 内容类型，如 `selection`、`selection-comment`、`advice`、`advice-comment`、`suggestion`、`suggestion-comment`、`dish-supplement`、`dish-management-modify` |
 | comment/reply | string | 否 | 评论或回复内容 |
 | dishName | string | 否 | 菜品名称 |
 | price | number | 否 | 价格 |
-| positions | array/json string | 否 | 位置信息 |
-| target | object/json string | 否 | 回复目标 |
+| positions | string | 否 | 位置信息的 JSON 字符串（数组），如 `"[{\"floor\":1,\"window\":1}]"` |
+| target | string | 否 | 回复目标的 JSON 字符串（对象），如 `"{\"type\":\"advice\",\"id\":1}"` |
+| userId | number/string | 否 | 操作者用户 ID（Advice/Suggestions 提交、评论、回复与点赞携带） |
+| username | string | 否 | 操作者用户名（Advice/Suggestions 提交、评论、回复与点赞携带） |
 
 - 响应示例：
 
@@ -528,7 +534,7 @@ console.log(menu);
 }
 ```
 
-以上 6 个接口通用行为与菜单同步一致：`changes` 按版本顺序逐条应用；`update` 只合并返回字段，本地不存在该记录时忽略；是否返回 `fullsync` 或 `incremental` 由后端决定，前端不判断版本差距；无本地数据或无对应版本号时不携带 `since` 并执行 Full Sync；同步成功后保存最新版本号。开发环境 mock 回退与 `getMenu` 一致：无 `since` 时模拟 fullsync（保持当前本地数据），有 `since` 时模拟空增量。
+以上 6 个接口通用行为与菜单同步一致：`changes` 按版本顺序逐条应用；`update` 只合并返回字段，本地不存在该记录时忽略；是否返回 `fullsync` 或 `incremental` 由后端决定，前端不判断版本差距；无本地数据或无对应版本号时不携带 `since` 并执行 Full Sync；同步成功后保存最新版本号。开发环境 mock 回退与 `getMenu` 一致：无 `since` 时模拟 fullsync（保持当前本地数据），有 `since` 时模拟空增量。**7 个同步接口只返回审核通过（`approved`）的内容；`pending` / `rejected` 不进入同步数据源。**
 
 ### 用户注册
 
@@ -540,7 +546,7 @@ console.log(menu);
 | 参数 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | username | string | 是 | 用户名 |
-| email | string | 是 | 邮箱 |
+| email | string | 否 | 邮箱（选填，为空时传 `null`） |
 | password | string | 是 | 密码（前端不做加密/摘要处理，不保存、不打印） |
 | captcha_token | string/null | 否 | 人机验证预留字段，默认 `null`，暂不接入任何 CAPTCHA |
 
@@ -678,8 +684,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：发布新品建议内容
-- 请求参数：`type`（固定为 `advice`）、`comment`（建议内容）
-- 请求示例：`{ "type": "advice", "comment": "希望增加低脂鸡胸肉沙拉窗口" }`
+- 请求参数：`type`（固定为 `advice`）、`comment`（建议内容）、`userId`（操作者用户 ID）、`username`（操作者用户名）
+- 请求示例：`{ "type": "advice", "comment": "希望增加低脂鸡胸肉沙拉窗口", "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "advice-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -693,8 +699,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对新品建议发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `advice-comment`）、`adviceId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'advice' | 'comment', id }`；回复主贴时传 `{ type: 'advice', id }`）
-- 请求示例：`{ "type": "advice-comment", "adviceId": 1, "reply": "支持这个建议", "target": { "type": "advice", "id": 1 } }`
+- 请求参数：`type`（固定为 `advice-comment`）、`adviceId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'advice' | 'comment', id }` 的 JSON 字符串）、`userId`、`username`
+- 请求示例：`{ "type": "advice-comment", "adviceId": 1, "reply": "支持这个建议", "target": "{\"type\":\"advice\",\"id\":1}", "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "advice-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -710,8 +716,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：发布食堂建议内容
-- 请求参数：`type`（固定为 `suggestion`）、`comment`（建议内容）
-- 请求示例：`{ "type": "suggestion", "comment": "建议午餐时段增加热汤自助台" }`
+- 请求参数：`type`（固定为 `suggestion`）、`comment`（建议内容）、`userId`（操作者用户 ID）、`username`（操作者用户名）
+- 请求示例：`{ "type": "suggestion", "comment": "建议午餐时段增加热汤自助台", "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "suggestion-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -725,8 +731,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对食堂建议发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `suggestion-comment`）、`suggestionId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'suggestion' | 'comment', id }`）
-- 请求示例：`{ "type": "suggestion-comment", "suggestionId": 1, "reply": "排队动线确实需要优化", "target": { "type": "suggestion", "id": 1 } }`
+- 请求参数：`type`（固定为 `suggestion-comment`）、`suggestionId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'suggestion' | 'comment', id }` 的 JSON 字符串）、`userId`、`username`
+- 请求示例：`{ "type": "suggestion-comment", "suggestionId": 1, "reply": "排队动线确实需要优化", "target": "{\"type\":\"suggestion\",\"id\":1}", "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "suggestion-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -742,8 +748,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：发布严选分享（菜品购买位置/价格推荐）
-- 请求参数：`type`（固定为 `selection`）、`comment`（分享内容）、`price`（价格）、`positions`（购买位置数组 `[{ floor, window }]`）
-- 请求示例：`{ "type": "selection", "comment": "这份套餐性价比很高", "price": 12, "positions": [{ "floor": 1, "window": 1 }] }`
+- 请求参数：`type`（固定为 `selection`）、`comment`（分享内容）、`price`（价格）、`positions`（购买位置数组的 JSON 字符串，如 `"[{\"floor\":1,\"window\":1}]"`）
+- 请求示例：`{ "type": "selection", "comment": "这份套餐性价比很高", "price": 12, "positions": "[{\"floor\":1,\"window\":1}]" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "selection-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -757,8 +763,8 @@ const result = await login({
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对严选分享发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `selection-comment`）、`selectionId`（分享 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'selection' | 'comment', id }`）
-- 请求示例：`{ "type": "selection-comment", "selectionId": 1, "reply": "这条分享很有参考价值", "target": { "type": "selection", "id": 1 } }`
+- 请求参数：`type`（固定为 `selection-comment`）、`selectionId`（分享 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'selection' | 'comment', id }` 的 JSON 字符串）
+- 请求示例：`{ "type": "selection-comment", "selectionId": 1, "reply": "这条分享很有参考价值", "target": "{\"type\":\"selection\",\"id\":1}" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "selection-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -842,6 +848,8 @@ const result = await login({
 | targetType | string | 是 | 点赞对象类型（如 `advice`、`suggestion`） |
 | targetId | number/string | 是 | 点赞对象 ID |
 | cancel | boolean | 否 | `true` 为取消点赞，默认 `false` |
+| userId | number/string | 否 | 操作者用户 ID |
+| username | string | 否 | 操作者用户名 |
 
 - 请求示例：`GET /api/like?targetType=advice&targetId=1&cancel=false`
 - 成功响应示例：`{ "success": true, "liked": true }`
@@ -894,5 +902,27 @@ const result = await login({
 - API 用途：查看用户详情、启用/禁用用户（预留接口，当前“查看/禁用”按钮未接入后端）
 - 请求参数：`fetchUserDetail`：`id`；`setUserStatus`：`id`、`enabled`
 - 请求示例：`GET /api/admin/user-detail?id=1`；`GET /api/admin/user-status?id=1&enabled=false`
-- 成功响应示例：`{ "success": true, "user": { "id": 1, "username": "同学A" } }`、`{ "success": true, "id": 1, "enabled": false }`
+- 成功响应示例（`fetchUserDetail`）：
+
+```json
+{
+  "success": true,
+  "user": {
+    "id": 1,
+    "username": "同学A",
+    "avatar_path": "",
+    "gender": "男",
+    "session": "2026届",
+    "classid": "3班",
+    "nickname": "同学A",
+    "realname": "张三",
+    "level": 3,
+    "register_date": "2026-01-12",
+    "rate_time": 8,
+    "email": "student@example.com"
+  }
+}
+```
+
+- 成功响应示例（`setUserStatus`）：`{ "success": true, "id": 1, "enabled": false }`
 - 失败响应示例：`{ "success": false, "message": "无权限" }`

@@ -24,9 +24,10 @@
                                         <div class="user-name">{{ user.nickname || user.username }}</div>
                                         <div class="user-account">@{{ user.username }}</div>
                                     </div>
+                                    <a-button v-if="!editing" size="small" @click="startEditing">编辑资料</a-button>
                                 </div>
                                 <a-divider />
-                                <div class="info-list">
+                                <div v-if="!editing" class="info-list">
                                     <div class="info-row"><span class="info-label">用户ID</span><span class="info-value">{{ user.id }}</span></div>
                                     <div class="info-row"><span class="info-label">用户名</span><span class="info-value">{{ user.username }}</span></div>
                                     <div class="info-row"><span class="info-label">昵称</span><span class="info-value">{{ user.nickname }}</span></div>
@@ -35,6 +36,18 @@
                                     <div class="info-row"><span class="info-label">届别</span><span class="info-value">{{ user.session }}</span></div>
                                     <div class="info-row"><span class="info-label">班级</span><span class="info-value">{{ user.classid }}</span></div>
                                     <div class="info-row"><span class="info-label">邮箱</span><span class="info-value">{{ user.email }}</span></div>
+                                </div>
+                                <div v-else class="profile-form">
+                                    <div class="form-row"><span class="info-label">昵称</span><a-input v-model:value="profileForm.nickname" /></div>
+                                    <div class="form-row"><span class="info-label">真实姓名</span><a-input v-model:value="profileForm.realname" /></div>
+                                    <div class="form-row"><span class="info-label">性别</span><a-select v-model:value="profileForm.gender" :options="genderOptions" style="width: 180px" /></div>
+                                    <div class="form-row"><span class="info-label">邮箱</span><a-input v-model:value="profileForm.email" /></div>
+                                    <div class="form-row"><span class="info-label">届别</span><a-input v-model:value="profileForm.session" /></div>
+                                    <div class="form-row"><span class="info-label">班级</span><a-input v-model:value="profileForm.classid" /></div>
+                                    <div class="form-actions">
+                                        <a-button @click="cancelEditing">取消</a-button>
+                                        <a-button type="primary" :loading="saving" @click="saveProfile">保存</a-button>
+                                    </div>
                                 </div>
                                 <a-divider />
                                 <a-row :gutter="[14, 14]">
@@ -56,7 +69,19 @@
 import badgeLogo from '@/static/badge.png';
 import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
 
-const { user, loading, avatarPreview, avatarFallback } = useAccountDetailPage();
+const {
+    user,
+    loading,
+    avatarPreview,
+    avatarFallback,
+    editing,
+    saving,
+    profileForm,
+    genderOptions,
+    startEditing,
+    cancelEditing,
+    saveProfile,
+} = useAccountDetailPage();
 </script>
 
 <style scoped>
@@ -74,6 +99,10 @@ const { user, loading, avatarPreview, avatarFallback } = useAccountDetailPage();
 .user-head-info { min-width: 0; }
 .user-name { color: #202124; font-size: 20px; font-weight: 700; }
 .user-account { color: #5f6368; font-size: 13px; }
+.profile-form { display: flex; flex-direction: column; gap: 4px; }
+.form-row { display: flex; align-items: center; gap: 16px; }
+.form-row .info-label { width: 72px; flex-shrink: 0; }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 .info-list { display: flex; flex-direction: column; gap: 12px; }
 .info-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid #f0f1f2; }
 .info-row:last-child { border-bottom: 0; padding-bottom: 0; }

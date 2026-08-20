@@ -15,8 +15,9 @@
                         <div class="profile-name">{{ user.nickname || user.username }}</div>
                         <div class="profile-sub">@{{ user.username }}</div>
                     </div>
+                    <a-button v-if="!editing" size="small" @click="startEditing">编辑资料</a-button>
                 </div>
-                <div class="info-list">
+                <div v-if="!editing" class="info-list">
                     <div class="stat-row"><span>用户ID</span><strong>{{ user.id }}</strong></div>
                     <div class="stat-row"><span>昵称</span><strong>{{ user.nickname }}</strong></div>
                     <div class="stat-row"><span>真实姓名</span><strong>{{ user.realname }}</strong></div>
@@ -24,6 +25,18 @@
                     <div class="stat-row"><span>届别</span><strong>{{ user.session }}</strong></div>
                     <div class="stat-row"><span>班级</span><strong>{{ user.classid }}</strong></div>
                     <div class="stat-row"><span>邮箱</span><strong>{{ user.email }}</strong></div>
+                </div>
+                <div v-else class="profile-form">
+                    <div class="form-row"><span>昵称</span><a-input v-model:value="profileForm.nickname" /></div>
+                    <div class="form-row"><span>真实姓名</span><a-input v-model:value="profileForm.realname" /></div>
+                    <div class="form-row"><span>性别</span><a-select v-model:value="profileForm.gender" :options="genderOptions" /></div>
+                    <div class="form-row"><span>邮箱</span><a-input v-model:value="profileForm.email" /></div>
+                    <div class="form-row"><span>届别</span><a-input v-model:value="profileForm.session" /></div>
+                    <div class="form-row"><span>班级</span><a-input v-model:value="profileForm.classid" /></div>
+                    <div class="form-actions">
+                        <a-button block @click="cancelEditing">取消</a-button>
+                        <a-button type="primary" block :loading="saving" @click="saveProfile">保存</a-button>
+                    </div>
                 </div>
             </template>
             <a-empty v-else description="无法获取用户信息" />
@@ -40,7 +53,19 @@
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
 
-const { user, loading, avatarPreview, avatarFallback } = useAccountDetailPage();
+const {
+    user,
+    loading,
+    avatarPreview,
+    avatarFallback,
+    editing,
+    saving,
+    profileForm,
+    genderOptions,
+    startEditing,
+    cancelEditing,
+    saveProfile,
+} = useAccountDetailPage();
 </script>
 
 <style scoped>
@@ -48,6 +73,10 @@ const { user, loading, avatarPreview, avatarFallback } = useAccountDetailPage();
 .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .profile-name { color: #202124; font-size: 18px; font-weight: 700; }
 .profile-sub { color: #5f6368; font-size: 13px; }
+.profile-top { flex-wrap: wrap; }
+.profile-form { display: flex; flex-direction: column; gap: 12px; }
+.form-row { display: flex; flex-direction: column; gap: 6px; color: #5f6368; font-size: 13px; }
+.form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
 .info-list { display: flex; flex-direction: column; }
 .stat-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eef0f1; color: #3c4043; }
 .stat-row:last-child { border-bottom: 0; }

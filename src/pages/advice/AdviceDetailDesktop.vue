@@ -19,12 +19,12 @@
 
             <a-comment class="advice-comment detail-comment">
                 <template #avatar>
-                    <a-avatar :size="56" class="user-avatar">{{ getUserInitial(currentAdvice.user_id) }}</a-avatar>
+                    <a-avatar :size="56" class="user-avatar" :src="displayAvatar(currentAdvice.user_id)">{{ getUserInitial(currentAdvice.user_id) }}</a-avatar>
                 </template>
 
                 <template #author>
                     <div class="comment-author-row">
-                        <span class="user-name">{{ currentAdvice.user_id }}</span>
+                        <span class="user-name">{{ displayUser(currentAdvice.user_id).username }}</span>
                         <span class="like-pill">
                             <like-filled />
                             {{ currentAdvice.like }}
@@ -70,12 +70,12 @@
                         <div class="comment-thread">
                             <a-comment class="advice-comment" :style="{ marginLeft: `${item.level * 64}px` }">
                                 <template #avatar>
-                                    <a-avatar :size="48" class="user-avatar">{{ getUserInitial(item.user_id) }}</a-avatar>
+                                    <a-avatar :size="48" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item.user_id) }}</a-avatar>
                                 </template>
 
                                 <template #author>
                                     <div class="comment-author-row">
-                                        <span class="user-name comment-user-name">{{ item.user_id }}</span>
+                                        <span class="user-name comment-user-name">{{ displayUser(item.user_id).username }}</span>
                                         <span class="like-pill like-pill-small">
                                             <like-filled />
                                             {{ item.likes }}
@@ -145,6 +145,8 @@ const {
     pageSize,
     pageSizeOptions,
     getUserInitial,
+    displayUser,
+    displayAvatar,
     isReplyingTo,
     goBack,
     openReplyBox,

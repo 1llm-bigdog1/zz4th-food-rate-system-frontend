@@ -6,12 +6,15 @@
  */
 import { computed, ref, watch } from 'vue';
 import { message } from 'ant-design-vue';
-import { getCached, STORES } from '@/db/indexedDB';
+import { STORES } from '@/db/indexedDB';
 import { dishesListText, sharedText } from '@/models/text';
 import { submitContentForReview } from '@/api/review';
 import { pushRate } from '@/api/pushRate';
+import { resolveUploadedImage } from '@/api/upload';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { useLoginGuard } from '@/composables/useLoginGuard';
+import { getMenu } from '@/api/getMenu';
+import { useSyncedData } from '@/composables/useSyncedData';
 
 export const useDishesListPage = () => {
     const { ensureLoggedIn } = useLoginGuard();
@@ -31,7 +34,7 @@ export const useDishesListPage = () => {
         resetFilters: '\u91cd\u7f6e\u7b5b\u9009',
     };
 
-    const dishes = ref(getCached(STORES.dishes));
+    const { data: dishes } = useSyncedData(STORES.dishes, getMenu);
     const searchInput = ref('');
     const searchKeyword = ref('');
     const selectedFloor = ref(undefined);
@@ -195,9 +198,11 @@ export const useDishesListPage = () => {
         }
         submitting.value = true;
         try {
+            const image = await resolveUploadedImage(nextForm.fileList, '');
             await submitContentForReview({
                 type: 'dish-supplement',
                 dishName: editDishName.value,
+                image,
                 ...nextForm,
             });
             editForm.value = nextForm;

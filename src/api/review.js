@@ -55,7 +55,17 @@ export const submitContentForReview = (payload) => {
     // Rating 补充信息（dish-supplement）等非审核类内容直接通过，不进入文字审核。
     const isReviewable = REVIEWABLE_TYPES.includes(type);
     const status = isReviewable ? debugReviewStatus : 'approved';
-    return getJson('/review/content', payload, {
+
+    // positions / target 统一序列化为 JSON 字符串传输，与前端 axios query 传参保持一致。
+    const params = { ...payload };
+    if (Array.isArray(params.positions)) {
+        params.positions = JSON.stringify(params.positions);
+    }
+    if (params.target && typeof params.target === 'object') {
+        params.target = JSON.stringify(params.target);
+    }
+
+    return getJson('/review/content', params, {
         success: true,
         status,
         approved: status === 'approved',
