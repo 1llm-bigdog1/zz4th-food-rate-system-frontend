@@ -11,7 +11,7 @@ import Selection from '@/models/Selection';
 import Position from '@/models/Position';
 import { putRecord, STORES } from '@/db/indexedDB';
 import { selectionListText, sharedText } from '@/models/text';
-import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/submitContentForReview';
 import { pushRate } from '@/api/pushRate';
 import { shouldUseMockApi } from '@/api/client';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';

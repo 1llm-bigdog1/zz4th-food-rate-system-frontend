@@ -10,7 +10,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { fetchCurrentUser } from '@/utils/currentUser';
-import { updateProfile } from '@/api/profile';
+import { updateProfile } from '@/api/updateProfile';
 
 const genderOptions = [
     { value: '\u7537', label: '\u7537' },

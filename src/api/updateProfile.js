@@ -1,5 +1,5 @@
 /**
- * 更新当前用户资料（预留接口）。
+ * 更新当前用户资料。
  *
  * - 接口：POST /profile（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/profile）
  * - 请求体：application/json，字段与当前 User 模型一致

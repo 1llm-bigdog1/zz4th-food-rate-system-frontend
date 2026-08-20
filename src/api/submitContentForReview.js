@@ -1,15 +1,16 @@
 /**
  * 内容提交与统一审核。
  *
- * - 接口：GET /review/content（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/review/content）
+ * - 接口：POST /review/content（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/review/content）
+ * - 请求体：application/json，包含 type 及对应字段；positions / target 以原生数组/对象传输。
  * - 除 Rating 评分与补充信息外，所有用户文字内容（建议/分享/评论/回复）均由后端调用第三方内容审核：
  *   前端不直接调用第三方审核，也不保存第三方 API Key。
  * - 审核状态：approved（显示）/ rejected（不显示）/ pending（审核中不显示）；
  *   审核服务异常、超时或无法确定结果时不得默认通过。
  * - 开发调试：无后端时默认模拟 approved；可通过 setDebugReviewStatus('rejected' | 'pending') 切换
- *   模拟不同审核结果（仅开发环境生效），便于测试不同 UI 状态。
+ *   模拟不同审核结果（仅开发环境生效）。
  */
-import { getJson } from '@/api/client';
+import apiClient, { shouldUseMockApi } from '@/api/client';
 
 // 需要审核的文字内容类型（Rating 评分与补充信息不在其中）。
 const REVIEWABLE_TYPES = [
@@ -50,25 +51,25 @@ export const getReviewStatus = (result) => {
     return 'error';
 };
 
-export const submitContentForReview = (payload) => {
+export const submitContentForReview = async (payload) => {
     const type = payload.type || 'content';
     // Rating 补充信息（dish-supplement）等非审核类内容直接通过，不进入文字审核。
     const isReviewable = REVIEWABLE_TYPES.includes(type);
     const status = isReviewable ? debugReviewStatus : 'approved';
 
-    // positions / target 统一序列化为 JSON 字符串传输，与前端 axios query 传参保持一致。
-    const params = { ...payload };
-    if (Array.isArray(params.positions)) {
-        params.positions = JSON.stringify(params.positions);
-    }
-    if (params.target && typeof params.target === 'object') {
-        params.target = JSON.stringify(params.target);
+    if (shouldUseMockApi()) {
+        return {
+            success: true,
+            status,
+            approved: status === 'approved',
+            reviewId: `${type}-${Date.now()}`,
+        };
     }
 
-    return getJson('/review/content', params, {
-        success: true,
-        status,
-        approved: status === 'approved',
-        reviewId: `${type}-${Date.now()}`,
+    const response = await apiClient.post('/review/content', payload, {
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
+    return response.data;
 };

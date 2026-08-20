@@ -126,8 +126,9 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
 
 ### 提交补充信息审核结果
 
-- 接口：`GET /admin/review-supplement`
+- 接口：`POST /admin/review-supplement`
 - 前端方法：`reviewSupplementInfo({ id, approved })`
+- 请求体格式：`application/json`
 - 参数：
 
 | 参数 | 类型 | 必填 | 说明 |
@@ -167,8 +168,9 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
 
 ### 评论/建议/补充信息统一审核
 
-- 接口：`GET /review/content`
+- 接口：`POST /review/content`
 - 前端方法：`submitContentForReview(payload)`
+- 请求体格式：`application/json`
 - 说明：当前前端 mock 直接返回通过，页面即时显示；后端接入后应由后端审核并返回是否通过，前端仅在 `approved: true` 时显示内容。
 - 参数：
 
@@ -178,8 +180,8 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
 | comment/reply | string | 否 | 评论或回复内容 |
 | dishName | string | 否 | 菜品名称 |
 | price | number | 否 | 价格 |
-| positions | string | 否 | 位置信息的 JSON 字符串（数组），如 `"[{\"floor\":1,\"window\":1}]"` |
-| target | string | 否 | 回复目标的 JSON 字符串（对象），如 `"{\"type\":\"advice\",\"id\":1}"` |
+| positions | array | 否 | 购买位置数组（JSON body 数组），如 `[{ "floor": 1, "window": 1 }]` |
+| target | object | 否 | 回复目标（JSON body 对象），如 `{ "type": "advice", "id": 1 }` |
 | userId | number/string | 否 | 操作者用户 ID（Advice/Suggestions 提交、评论、回复与点赞携带） |
 | username | string | 否 | 操作者用户名（Advice/Suggestions 提交、评论、回复与点赞携带） |
 
@@ -651,7 +653,7 @@ const result = await login({
 #### 补充信息提交（菜品）
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：否（Rating 补充信息不进入文字审核）
@@ -677,7 +679,7 @@ const result = await login({
 #### 内容提交
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
@@ -692,15 +694,15 @@ const result = await login({
 #### 评论提交与回复
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对新品建议发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `advice-comment`）、`adviceId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'advice' | 'comment', id }` 的 JSON 字符串）、`userId`、`username`
-- 请求示例：`{ "type": "advice-comment", "adviceId": 1, "reply": "支持这个建议", "target": "{\"type\":\"advice\",\"id\":1}", "userId": 1, "username": "student_2026" }`
+- 请求参数：`type`（固定为 `advice-comment`）、`adviceId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标对象 `{ type: 'advice' | 'comment', id }`）、`userId`、`username`
+- 请求示例：`{ "type": "advice-comment", "adviceId": 1, "reply": "支持这个建议", "target": { "type": "advice", "id": 1 }, "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "advice-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -709,7 +711,7 @@ const result = await login({
 #### 内容提交
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
@@ -724,15 +726,15 @@ const result = await login({
 #### 评论提交与回复
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对食堂建议发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `suggestion-comment`）、`suggestionId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'suggestion' | 'comment', id }` 的 JSON 字符串）、`userId`、`username`
-- 请求示例：`{ "type": "suggestion-comment", "suggestionId": 1, "reply": "排队动线确实需要优化", "target": "{\"type\":\"suggestion\",\"id\":1}", "userId": 1, "username": "student_2026" }`
+- 请求参数：`type`（固定为 `suggestion-comment`）、`suggestionId`（建议 ID）、`reply`（评论/回复内容）、`target`（回复目标对象 `{ type: 'suggestion' | 'comment', id }`）、`userId`、`username`
+- 请求示例：`{ "type": "suggestion-comment", "suggestionId": 1, "reply": "排队动线确实需要优化", "target": { "type": "suggestion", "id": 1 }, "userId": 1, "username": "student_2026" }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "suggestion-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -741,30 +743,30 @@ const result = await login({
 #### 内容提交
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：发布严选分享（菜品购买位置/价格推荐）
-- 请求参数：`type`（固定为 `selection`）、`comment`（分享内容）、`price`（价格）、`positions`（购买位置数组的 JSON 字符串，如 `"[{\"floor\":1,\"window\":1}]"`）
-- 请求示例：`{ "type": "selection", "comment": "这份套餐性价比很高", "price": 12, "positions": "[{\"floor\":1,\"window\":1}]" }`
+- 请求参数：`type`（固定为 `selection`）、`comment`（分享内容）、`price`（价格）、`positions`（购买位置数组 `[{ floor, window }]`）
+- 请求示例：`{ "type": "selection", "comment": "这份套餐性价比很高", "price": 12, "positions": [{ "floor": 1, "window": 1 }] }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "selection-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
 #### 评论提交与回复
 
 - API 名称：`submitContentForReview`
-- HTTP Method：`GET`
+- HTTP Method：`POST`
 - URL：`/api/review/content`
 - 是否需要登录：是
 - 是否需要审核：是（后端调用第三方内容审核，前端不直接调用）
 - 审核状态：`approved`（显示）/ `rejected`（不显示）/ `pending`（审核中不显示）
 - 显示规则：仅 `approved` 内容显示；`rejected` 与 `pending` 不显示
 - API 用途：对严选分享发表评论，或回复某条评论（子评论）
-- 请求参数：`type`（固定为 `selection-comment`）、`selectionId`（分享 ID）、`reply`（评论/回复内容）、`target`（回复目标，`{ type: 'selection' | 'comment', id }` 的 JSON 字符串）
-- 请求示例：`{ "type": "selection-comment", "selectionId": 1, "reply": "这条分享很有参考价值", "target": "{\"type\":\"selection\",\"id\":1}" }`
+- 请求参数：`type`（固定为 `selection-comment`）、`selectionId`（分享 ID）、`reply`（评论/回复内容）、`target`（回复目标对象 `{ type: 'selection' | 'comment', id }`）
+- 请求示例：`{ "type": "selection-comment", "selectionId": 1, "reply": "这条分享很有参考价值", "target": { "type": "selection", "id": 1 } }`
 - 成功响应示例：`{ "success": true, "approved": true, "reviewId": "selection-comment-123" }`
 - 失败响应示例：`{ "success": false, "message": "请先登录" }`
 
@@ -882,26 +884,26 @@ const result = await login({
 ### 管理端：菜品新增 / 删除
 
 - API 名称：`createDish` / `deleteDish`
-- HTTP Method：`GET`
+- HTTP Method：`POST`（新增）/ `DELETE`（删除）
 - URL：`/api/admin/dish/add`、`/api/admin/dish/delete`
 - 是否需要登录：是（管理端操作，需管理员会话）
 - API 用途：管理端新增菜品、删除菜品（预留接口，当前新增/删除为本地 IndexedDB 状态）
 - 请求参数：
   - `createDish`：`name`、`price`、`stair`、`window`、`image`
   - `deleteDish`：`id`
-- 请求示例：`GET /api/admin/dish/add?name=红烧肉&price=18&stair=1&window=1`；`GET /api/admin/dish/delete?id=1`
+- 请求示例：`POST /api/admin/dish/add`（JSON body `{ "name": "红烧肉", "price": 18, "stair": 1, "window": 1, "image": "" }`）；`DELETE /api/admin/dish/delete?id=1`
 - 成功响应示例：`{ "success": true, "dishId": 1 }`、`{ "success": true }`
 - 失败响应示例：`{ "success": false, "message": "无权限" }`
 
 ### 管理端：用户详情 / 启用禁用
 
 - API 名称：`fetchUserDetail` / `setUserStatus`
-- HTTP Method：`GET`
+- HTTP Method：`GET`（详情）/ `POST`（启用禁用）
 - URL：`/api/admin/user-detail`、`/api/admin/user-status`
 - 是否需要登录：是（管理端操作，需管理员会话）
 - API 用途：查看用户详情、启用/禁用用户（预留接口，当前“查看/禁用”按钮未接入后端）
 - 请求参数：`fetchUserDetail`：`id`；`setUserStatus`：`id`、`enabled`
-- 请求示例：`GET /api/admin/user-detail?id=1`；`GET /api/admin/user-status?id=1&enabled=false`
+- 请求示例：`GET /api/admin/user-detail?id=1`；`POST /api/admin/user-status`（JSON body `{ "id": 1, "enabled": false }`）
 - 成功响应示例（`fetchUserDetail`）：
 
 ```json

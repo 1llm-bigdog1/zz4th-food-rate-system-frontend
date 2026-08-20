@@ -1,3 +1,9 @@
+/**
+ * 管理端 API（统一 /api/admin/*）。
+ *
+ * - 鉴权：由后端 Session + role=admin 判断，前端不自行判断管理员资格。
+ * - 方法约定：GET=查询、POST=创建/修改/提交、DELETE=删除。
+ */
 import apiClient, { getJson, shouldUseMockApi } from '@/api/client';
 
 const MOCK_PENDING_SUPPLEMENT_REVIEWS = [
@@ -57,22 +63,57 @@ export const fetchPendingSupplementReviews = () =>
         pending: MOCK_PENDING_SUPPLEMENT_REVIEWS,
     });
 
-export const reviewSupplementInfo = ({ id, approved }) =>
-    getJson('/admin/review-supplement', { id, approved }, { success: true, approved });
-
 /**
- * 菜品新增（管理端，预留接口）。
+ * 提交补充信息审核结果（POST JSON body）。
  */
-export const createDish = (payload) =>
-    getJson('/admin/dish/add', payload, { success: true, dishId: (payload && payload.id) || 1 });
+export const reviewSupplementInfo = async ({ id, approved }) => {
+    if (shouldUseMockApi()) {
+        return { success: true, approved };
+    }
+    const response = await apiClient.post(
+        '/admin/review-supplement',
+        { id, approved },
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        },
+    );
+    return response.data;
+};
 
 /**
- * 菜品删除（管理端，预留接口）。
+ * 菜品新增（管理端，POST JSON body）。
  */
-export const deleteDish = (id) => getJson('/admin/dish/delete', { id }, { success: true });
+export const createDish = async (payload) => {
+    if (shouldUseMockApi()) {
+        return { success: true, dishId: (payload && payload.id) || 1 };
+    }
+    const response = await apiClient.post(
+        '/admin/dish/add',
+        payload,
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        },
+    );
+    return response.data;
+};
 
 /**
- * 用户详情（管理端，预留接口）。
+ * 菜品删除（管理端，DELETE）。
+ */
+export const deleteDish = async (id) => {
+    if (shouldUseMockApi()) {
+        return { success: true };
+    }
+    const response = await apiClient.delete('/admin/dish/delete', { params: { id } });
+    return response.data;
+};
+
+/**
+ * 用户详情（管理端，GET）。
  */
 export const fetchUserDetail = (id) =>
     getJson('/admin/user-detail', { id }, {
@@ -94,10 +135,23 @@ export const fetchUserDetail = (id) =>
     });
 
 /**
- * 用户启用 / 禁用（管理端，预留接口）。
+ * 用户启用 / 禁用（管理端，POST JSON body）。
  */
-export const setUserStatus = ({ id, enabled }) =>
-    getJson('/admin/user-status', { id, enabled }, { success: true, id, enabled });
+export const setUserStatus = async ({ id, enabled }) => {
+    if (shouldUseMockApi()) {
+        return { success: true, id, enabled };
+    }
+    const response = await apiClient.post(
+        '/admin/user-status',
+        { id, enabled },
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        },
+    );
+    return response.data;
+};
 
 export const fetchUsers = () =>
     getJson('/admin/users', {}, {

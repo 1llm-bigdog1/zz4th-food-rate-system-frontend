@@ -1,9 +1,9 @@
 /**
- * 图片上传（预留接口）。
+ * 图片上传。
  *
  * - 接口：POST /upload（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/upload）
  * - 请求体：multipart/form-data，字段名 `file`（Content-Type 由 axios 根据 FormData 自动设置边界）。
- * - 返回上传后的图片 URL。
+ * - 返回上传后的图片 URL；开发环境继续支持本地预览回退。
  */
 import apiClient, { shouldUseMockApi } from '@/api/client';
 

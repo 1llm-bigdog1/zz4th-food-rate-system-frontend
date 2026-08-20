@@ -10,7 +10,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { putRecord, STORES } from '@/db/indexedDB';
 import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
-import { getReviewStatus, submitContentForReview } from '@/api/review';
+import { getReviewStatus, submitContentForReview } from '@/api/submitContentForReview';
 import { pushRate } from '@/api/pushRate';
 import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';

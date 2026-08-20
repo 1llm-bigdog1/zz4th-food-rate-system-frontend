@@ -1,5 +1,5 @@
 /**
- * 点赞 / 取消点赞（预留接口）。
+ * 点赞 / 取消点赞。
  *
  * - 接口：GET /like（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/like）
  * - 参数：targetType（如 advice / suggestion）、targetId、cancel（true 为取消点赞）
