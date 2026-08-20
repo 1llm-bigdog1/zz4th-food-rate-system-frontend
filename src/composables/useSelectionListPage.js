@@ -13,6 +13,7 @@ import { putRecord, STORES } from '@/db/indexedDB';
 import { selectionListText, sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { pushRate } from '@/api/pushRate';
+import { shouldUseMockApi } from '@/api/client';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSelection } from '@/api/getSelection';
@@ -22,7 +23,7 @@ import { useSyncedData } from '@/composables/useSyncedData';
 // 这里把业务状态全部抽离，保证双端行为完全一致。
 export const useSelectionListPage = () => {
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -119,6 +120,8 @@ export const useSelectionListPage = () => {
             }
             ratingModalVisible.value = false;
             message.success(text.submitRating);
+        } catch (error) {
+            handleApiError(error, '评分提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }
@@ -162,20 +165,31 @@ export const useSelectionListPage = () => {
                 return;
             }
 
-            const newSelection = new Selection(
-                Date.now(),
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                form.value.price,
-                validPositions.map((item) => new Position(item.floor, item.window)),
-                5,
-            );
-            selections.value.unshift(newSelection);
-            await putRecord(STORES.selections, newSelection);
+            if (shouldUseMockApi()) {
+                const newSelection = new Selection(
+                    Date.now(),
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    form.value.price,
+                    validPositions.map((item) => new Position(item.floor, item.window)),
+                    5,
+                );
+                selections.value.unshift(newSelection);
+                await putRecord(STORES.selections, newSelection);
+            } else {
+                // 真实后端：等待增量同步拉取正式记录，避免临时 id 与后端 id 重复。
+                try {
+                    await getSelection();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             visibleCount.value = Math.max(visibleCount.value, pageSize);
             resetForm();
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

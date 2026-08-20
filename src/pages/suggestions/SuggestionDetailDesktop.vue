@@ -10,7 +10,8 @@
             <left-outlined class="back-icon" />
             <span>{{ text.back }}</span>
         </div>
-        <div id="rank-show">
+        <a-empty v-if="!currentSuggestion" class="detail-empty" description="内容不存在或已删除" />
+        <div v-if="currentSuggestion" id="rank-show">
             <div class="panel-header">
                 <span class="dish-show-title">{{ text.detailTitle }}</span>
                 <span class="panel-subtitle">{{ text.detailSubtitle }}</span>
@@ -41,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div id="rank-show" class="comment-panel">
+        <div v-if="currentSuggestion" id="rank-show" class="comment-panel">
             <div class="panel-header">
                 <span class="dish-show-title">{{ text.commentPanelTitle }}</span>
                 <span class="panel-subtitle">{{ text.commentPanelSubtitle }}</span>
@@ -98,6 +99,7 @@ const { text, currentSuggestion, pagedCommentList, commentList, replyContent, su
 
 <style scoped>
 #suggestion-detail-page { display: flex; flex-direction: column; gap: 20px; }
+.detail-empty { margin-top: 24px; }
 .detail-back { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 8px 14px; border: 1px solid #e6e6e6; border-radius: 999px; background: #fff; color: #1f1f1f; cursor: pointer; }
 #rank-show { border: 1px solid #e6e6e6; border-radius: 8px; padding: 16px; }
 .comment-panel { margin-bottom: 8px; }

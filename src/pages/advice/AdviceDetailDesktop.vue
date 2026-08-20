@@ -10,8 +10,9 @@
             <left-outlined class="back-icon" />
             <span>{{ text.back }}</span>
         </div>
+        <a-empty v-if="!currentAdvice" class="detail-empty" description="内容不存在或已删除" />
 
-        <div id="rank-show">
+        <div v-if="currentAdvice" id="rank-show">
             <div class="panel-header">
                 <span class="dish-show-title">{{ text.detailTitle }}</span>
                 <span class="panel-subtitle">{{ text.detailSubtitle }}</span>
@@ -58,7 +59,7 @@
             </div>
         </div>
 
-        <div id="rank-show" class="comment-panel">
+        <div v-if="currentAdvice" id="rank-show" class="comment-panel">
             <div class="panel-header">
                 <span class="dish-show-title">{{ text.commentPanelTitle }}</span>
                 <span class="panel-subtitle">{{ text.commentPanelSubtitle }}</span>
@@ -160,6 +161,7 @@ const {
 
 <style scoped>
 #advice-detail-page { display: flex; flex-direction: column; gap: 20px; }
+.detail-empty { margin-top: 24px; }
 .detail-back { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 8px 14px; border: 1px solid #e6e6e6; border-radius: 999px; background: #fff; color: #1f1f1f; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease, color .2s ease; }
 .detail-back:hover { border-color: #d9d9d9; color: #1677ff; box-shadow: 0 10px 24px rgba(0,0,0,.12); }
 .back-icon { font-size: 14px; }

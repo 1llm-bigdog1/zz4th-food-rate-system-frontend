@@ -27,7 +27,12 @@ initLocalData().finally(() => {
         .use(Antd)
         .use(router);
     let errorPageNavigated = false;
-    app.config.errorHandler = () => {
+    app.config.errorHandler = (error) => {
+        // axios 错误已由 src/api/client.js 拦截器按状态码导航（403/5xx/网络错误）或
+        // 由登录恢复/守卫处理（401），此处不再覆盖为 /500。
+        if (error && error.isAxiosError) {
+            return;
+        }
         if (!errorPageNavigated) {
             errorPageNavigated = true;
             router.push('/500');

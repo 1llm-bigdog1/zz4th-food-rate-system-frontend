@@ -156,7 +156,7 @@ VUE_APP_API_BASE_URL=http://localhost:8080/api
   "users": [
     {
       "id": 1,
-      "name": "同学A",
+      "username": "同学A",
       "role": "普通用户",
       "ratingCount": 8,
       "status": "正常"

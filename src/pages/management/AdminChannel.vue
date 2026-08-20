@@ -62,9 +62,15 @@ onMounted(() => {
 });
 
 const submitPassword = async () => {
-    const result = await verifyAdminPassword(password.value);
+    let result;
+    try {
+        result = await verifyAdminPassword(password.value);
+    } catch (error) {
+        passwordError.value = '验证失败，请稍后重试';
+        return;
+    }
 
-    if (!result.success) {
+    if (!result || !result.success) {
         passwordError.value = '密码错误，请重新输入';
         return;
     }

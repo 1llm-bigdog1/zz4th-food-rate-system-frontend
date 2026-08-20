@@ -10,7 +10,8 @@
             <left-outlined class="back-icon" />
             <span>{{ detailText.back }}</span>
         </div>
-        <div id="rank-show">
+        <a-empty v-if="!currentSelection" class="detail-empty" description="内容不存在或已删除" />
+        <div v-if="currentSelection" id="rank-show">
             <div class="panel-header">
                 <span class="dish-show-title">{{ detailText.detailTitle }}</span>
                 <span class="panel-subtitle">{{ detailText.detailSubtitle }}</span>
@@ -48,7 +49,7 @@
                 </div>
             </div>
         </div>
-        <div id="rank-show" class="comment-panel">
+        <div v-if="currentSelection" id="rank-show" class="comment-panel">
             <div class="panel-header">
                 <span class="dish-show-title">{{ detailText.commentTitle }}</span>
                 <span class="panel-subtitle">{{ detailText.commentSubtitle }}</span>
@@ -110,6 +111,7 @@ const { text, detailText, currentSelection, pagedCommentList, commentList, ratin
 
 <style scoped>
 #selection-detail-page { display: flex; flex-direction: column; gap: 20px; }
+.detail-empty { margin-top: 24px; }
 .detail-back { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 8px 14px; border: 1px solid #e6e6e6; border-radius: 999px; background: #fff; color: #1f1f1f; cursor: pointer; }
 #rank-show { border: 1px solid #e6e6e6; border-radius: 8px; padding: 16px; }
 .comment-panel { margin-bottom: 8px; }

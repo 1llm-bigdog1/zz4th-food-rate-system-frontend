@@ -16,8 +16,11 @@ import { resolveUploadedImage } from '@/api/upload';
 import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { getMenu } from '@/api/getMenu';
 import { useSyncedData } from '@/composables/useSyncedData';
+import { useLoginGuard } from '@/composables/useLoginGuard';
 
 export const useDishesManagementPage = () => {
+    const { handleApiError } = useLoginGuard();
+
     const text = {
         ...sharedText,
         ...dishesListText,
@@ -167,26 +170,30 @@ export const useDishesManagementPage = () => {
             return;
         }
         const image = await resolveUploadedImage(nextForm.fileList, '');
-        await submitContentForReview({
-            type: 'dish-management-modify',
-            dishId: editDishId.value,
-            dishName: editDishName.value,
-            image,
-            ...nextForm,
-        });
-        const targetDish = dishes.value.find((item) => item.id === editDishId.value);
-        if (targetDish) {
-            targetDish.position = {
-                stair: nextForm.stair ?? targetDish.position.stair,
-                window: nextForm.window ?? targetDish.position.window,
-            };
-            targetDish.price = nextForm.price ?? targetDish.price;
-            targetDish.image = image || getImageFromFileList(nextForm.fileList, targetDish.image);
-            await putRecord(STORES.dishes, targetDish);
+        try {
+            await submitContentForReview({
+                type: 'dish-management-modify',
+                dishId: editDishId.value,
+                dishName: editDishName.value,
+                image,
+                ...nextForm,
+            });
+            const targetDish = dishes.value.find((item) => item.id === editDishId.value);
+            if (targetDish) {
+                targetDish.position = {
+                    stair: nextForm.stair ?? targetDish.position.stair,
+                    window: nextForm.window ?? targetDish.position.window,
+                };
+                targetDish.price = nextForm.price ?? targetDish.price;
+                targetDish.image = image || getImageFromFileList(nextForm.fileList, targetDish.image);
+                await putRecord(STORES.dishes, targetDish);
+            }
+            editForm.value = nextForm;
+            editModalVisible.value = false;
+            message.success(text.modifySuccess);
+        } catch (error) {
+            handleApiError(error, '修改失败，请稍后重试');
         }
-        editForm.value = nextForm;
-        editModalVisible.value = false;
-        message.success(text.modifySuccess);
     };
 
     const openAddModal = () => {
@@ -206,45 +213,53 @@ export const useDishesManagementPage = () => {
 
     const submitAdd = async (nextForm) => {
         const image = await resolveUploadedImage(nextForm.fileList, noImage);
-        const result = await createDish({
-            name: nextForm.name.trim(),
-            price: nextForm.price ?? 0,
-            stair: nextForm.stair ?? 1,
-            window: nextForm.window ?? 1,
-            image,
-        });
-        if (!result || result.success === false) {
-            message.error((result && result.message) || '\u6dfb\u52a0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
-            return;
+        try {
+            const result = await createDish({
+                name: nextForm.name.trim(),
+                price: nextForm.price ?? 0,
+                stair: nextForm.stair ?? 1,
+                window: nextForm.window ?? 1,
+                image,
+            });
+            if (!result || result.success === false) {
+                message.error((result && result.message) || '\u6dfb\u52a0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
+                return;
+            }
+            const nextId = dishes.value.length ? Math.max(...dishes.value.map((dish) => dish.id)) + 1 : 1;
+            const newDish = new Dish(
+                nextId,
+                nextForm.name.trim(),
+                { stair: nextForm.stair ?? 1, window: nextForm.window ?? 1 },
+                image || getImageFromFileList(nextForm.fileList, noImage),
+                0,
+                nextForm.price ?? 0,
+            );
+            dishes.value.unshift(newDish);
+            await putRecord(STORES.dishes, newDish);
+            addModalVisible.value = false;
+            currentPage.value = 1;
+            message.success(text.addSuccess);
+        } catch (error) {
+            handleApiError(error, '添加失败，请稍后重试');
         }
-        const nextId = dishes.value.length ? Math.max(...dishes.value.map((dish) => dish.id)) + 1 : 1;
-        const newDish = new Dish(
-            nextId,
-            nextForm.name.trim(),
-            { stair: nextForm.stair ?? 1, window: nextForm.window ?? 1 },
-            image || getImageFromFileList(nextForm.fileList, noImage),
-            0,
-            nextForm.price ?? 0,
-        );
-        dishes.value.unshift(newDish);
-        await putRecord(STORES.dishes, newDish);
-        addModalVisible.value = false;
-        currentPage.value = 1;
-        message.success(text.addSuccess);
     };
 
     const deleteDish = async (record) => {
-        const result = await deleteDishRequest(record.id);
-        if (!result || result.success === false) {
-            message.error((result && result.message) || '\u5220\u9664\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
-            return;
+        try {
+            const result = await deleteDishRequest(record.id);
+            if (!result || result.success === false) {
+                message.error((result && result.message) || '\u5220\u9664\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5');
+                return;
+            }
+            const index = dishes.value.findIndex((dish) => dish.id === record.id);
+            if (index >= 0) {
+                dishes.value.splice(index, 1);
+                await removeRecord(STORES.dishes, record.id);
+            }
+            message.success(text.deleteSuccess);
+        } catch (error) {
+            handleApiError(error, '删除失败，请稍后重试');
         }
-        const index = dishes.value.findIndex((dish) => dish.id === record.id);
-        if (index >= 0) {
-            dishes.value.splice(index, 1);
-            await removeRecord(STORES.dishes, record.id);
-        }
-        message.success(text.deleteSuccess);
     };
 
     watch([searchKeyword, selectedFloor, selectedWindow], () => {

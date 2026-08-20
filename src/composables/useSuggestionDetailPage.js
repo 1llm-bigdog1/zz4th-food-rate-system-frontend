@@ -11,6 +11,7 @@ import { putRecord, STORES } from '@/db/indexedDB';
 import SuggestionComment from '@/models/SuggestionComment';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { toggleLike as toggleLikeRequest } from '@/api/like';
+import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSuggestion } from '@/api/getSuggestion';
 import { getSuggestionComments } from '@/api/getSuggestionComments';
@@ -22,7 +23,7 @@ import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDi
 export const useSuggestionDetailPage = () => {
     const route = useRoute();
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         back: '返回',
@@ -46,11 +47,12 @@ export const useSuggestionDetailPage = () => {
 
     const { data: suggestions } = useSyncedData(STORES.suggestions, getSuggestion);
     const currentSuggestionId = Number(route.params.id);
-    const currentSuggestion = computed(() => suggestions.value.find((item) => item.id === currentSuggestionId) || suggestions.value[0]);
+    const currentSuggestion = computed(() => suggestions.value.find((item) => item.id === currentSuggestionId) || suggestions.value[0] || null);
     const { data: comments } = useSyncedData(STORES.suggestionComments, getSuggestionComments);
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
     const submitting = ref(false);
+    const likeSubmitting = ref(false);
     const currentPage = ref(1);
     const pageSize = ref(5);
     const pageSizeOptions = ['5', '10', '20'];
@@ -68,6 +70,9 @@ export const useSuggestionDetailPage = () => {
             ]);
 
     const commentList = computed(() => {
+        if (!currentSuggestion.value) {
+            return [];
+        }
         const related = comments.value.filter((item) => item.suggestion_id === currentSuggestion.value.id);
         const usersById = Object.fromEntries(related.map((item) => [item.id, item.user_id]));
         return buildCommentTree(related, null, 0, usersById);
@@ -100,9 +105,13 @@ export const useSuggestionDetailPage = () => {
     };
 
     const toggleSuggestionLike = async () => {
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
@@ -119,6 +128,8 @@ export const useSuggestionDetailPage = () => {
             await putRecord(STORES.suggestions, currentSuggestion.value);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -127,9 +138,13 @@ export const useSuggestionDetailPage = () => {
         if (!target) {
             return;
         }
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
@@ -146,6 +161,8 @@ export const useSuggestionDetailPage = () => {
             await putRecord(STORES.suggestionComments, target);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -189,19 +206,30 @@ export const useSuggestionDetailPage = () => {
                 return;
             }
 
-            const newComment = new SuggestionComment(
-                `${currentSuggestion.value.id}-comment-${Date.now()}`,
-                userId || text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                currentSuggestion.value.id,
-                cleanReply,
-                activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
-                0,
-            );
-            comments.value.push(newComment);
-            await putRecord(STORES.suggestionComments, newComment);
+            if (shouldUseMockApi()) {
+                const newComment = new SuggestionComment(
+                    `${currentSuggestion.value.id}-comment-${Date.now()}`,
+                    userId || text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    currentSuggestion.value.id,
+                    cleanReply,
+                    activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
+                    0,
+                );
+                comments.value.push(newComment);
+                await putRecord(STORES.suggestionComments, newComment);
+            } else {
+                // 真实后端：等待增量同步拉取正式评论，避免临时 id 与后端 id 重复。
+                try {
+                    await getSuggestionComments();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             cancelReply();
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

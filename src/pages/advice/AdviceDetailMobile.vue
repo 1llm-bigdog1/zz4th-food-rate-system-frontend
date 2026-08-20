@@ -7,8 +7,9 @@
 <template>
     <MobilePageShell :title="text.detailTitle" :subtitle="text.detailSubtitle">
         <a-button class="back-button" @click="goBack">{{ text.back }}</a-button>
+        <a-empty v-if="!currentAdvice" class="detail-empty" description="内容不存在或已删除" />
 
-        <section class="detail-card">
+        <section v-if="currentAdvice" class="detail-card">
             <div class="card-top">
                 <div class="author-chip">
                     <img v-if="displayAvatar(currentAdvice.user_id)" :src="displayAvatar(currentAdvice.user_id)" alt="" class="chip-avatar" />
@@ -36,7 +37,7 @@
             </div>
         </section>
 
-        <section class="detail-card">
+        <section v-if="currentAdvice" class="detail-card">
             <h2 class="section-title">{{ text.commentPanelTitle }}</h2>
             <p class="section-subtitle">{{ text.commentPanelSubtitle }}</p>
             <div class="mobile-list">
@@ -111,6 +112,7 @@ const {
 
 <style scoped>
 .back-button { width: fit-content; }
+.detail-empty { margin-top: 16px; }
 .detail-card, .comment-card { padding: 16px; border: 1px solid #e8eaed; border-radius: 20px; background: #fff; }
 .mobile-list { display: flex; flex-direction: column; gap: 12px; }
 .card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }

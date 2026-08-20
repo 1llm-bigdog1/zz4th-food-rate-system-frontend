@@ -11,6 +11,7 @@ import { putRecord, STORES } from '@/db/indexedDB';
 import AdviceComment from '@/models/AdviceComment';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { toggleLike as toggleLikeRequest } from '@/api/like';
+import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getAdvice } from '@/api/getAdvice';
 import { getAdviceComments } from '@/api/getAdviceComments';
@@ -22,7 +23,7 @@ import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDi
 export const useAdviceDetailPage = () => {
     const route = useRoute();
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         back: '返回',
@@ -46,11 +47,12 @@ export const useAdviceDetailPage = () => {
 
     const { data: advices } = useSyncedData(STORES.advices, getAdvice);
     const currentAdviceId = Number(route.params.id);
-    const currentAdvice = computed(() => advices.value.find((item) => item.id === currentAdviceId) || advices.value[0]);
+    const currentAdvice = computed(() => advices.value.find((item) => item.id === currentAdviceId) || advices.value[0] || null);
     const { data: comments } = useSyncedData(STORES.adviceComments, getAdviceComments);
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
     const submitting = ref(false);
+    const likeSubmitting = ref(false);
     const currentPage = ref(1);
     const pageSize = ref(5);
     const pageSizeOptions = ['5', '10', '20'];
@@ -68,6 +70,9 @@ export const useAdviceDetailPage = () => {
             ]);
 
     const commentList = computed(() => {
+        if (!currentAdvice.value) {
+            return [];
+        }
         const related = comments.value.filter((item) => item.advice_id === currentAdvice.value.id);
         const usersById = Object.fromEntries(related.map((item) => [item.id, item.user_id]));
         return buildCommentTree(related, null, 0, usersById);
@@ -100,9 +105,13 @@ export const useAdviceDetailPage = () => {
     };
 
     const toggleAdviceLike = async () => {
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
@@ -119,6 +128,8 @@ export const useAdviceDetailPage = () => {
             await putRecord(STORES.advices, currentAdvice.value);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -127,9 +138,13 @@ export const useAdviceDetailPage = () => {
         if (!target) {
             return;
         }
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
@@ -146,6 +161,8 @@ export const useAdviceDetailPage = () => {
             await putRecord(STORES.adviceComments, target);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -189,19 +206,30 @@ export const useAdviceDetailPage = () => {
                 return;
             }
 
-            const newComment = new AdviceComment(
-                `${currentAdvice.value.id}-comment-${Date.now()}`,
-                userId || text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                currentAdvice.value.id,
-                cleanReply,
-                activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
-                0,
-            );
-            comments.value.push(newComment);
-            await putRecord(STORES.adviceComments, newComment);
+            if (shouldUseMockApi()) {
+                const newComment = new AdviceComment(
+                    `${currentAdvice.value.id}-comment-${Date.now()}`,
+                    userId || text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    currentAdvice.value.id,
+                    cleanReply,
+                    activeReplyTarget.value.type === 'comment' ? activeReplyTarget.value.id : null,
+                    0,
+                );
+                comments.value.push(newComment);
+                await putRecord(STORES.adviceComments, newComment);
+            } else {
+                // 真实后端：等待增量同步拉取正式评论，避免临时 id 与后端 id 重复。
+                try {
+                    await getAdviceComments();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             cancelReply();
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

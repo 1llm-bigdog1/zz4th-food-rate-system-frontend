@@ -60,7 +60,7 @@ const detailLoading = ref(false);
 const detailUser = ref(null);
 const columns = [
     { title: '用户ID', dataIndex: 'id', key: 'id', width: 100 },
-    { title: '用户名', dataIndex: 'name', key: 'name' },
+    { title: '用户名', dataIndex: 'username', key: 'username' },
     { title: '角色', dataIndex: 'role', key: 'role' },
     { title: '参与评分数量', dataIndex: 'ratingCount', key: 'ratingCount' },
     { title: '状态', dataIndex: 'status', key: 'status' },
@@ -72,12 +72,16 @@ const filteredUsers = computed(() => {
     if (!cleanKeyword) {
         return users.value;
     }
-    return users.value.filter((user) => user.name.toLowerCase().includes(cleanKeyword));
+    return users.value.filter((user) => (user.username || '').toLowerCase().includes(cleanKeyword));
 });
 
 onMounted(async () => {
-    const result = await fetchUsers();
-    users.value = result.users || [];
+    try {
+        const result = await fetchUsers();
+        users.value = (result || {}).users || [];
+    } catch (error) {
+        message.error('用户列表加载失败，请稍后重试');
+    }
 });
 
 const openDetail = async (record) => {
@@ -87,6 +91,9 @@ const openDetail = async (record) => {
     try {
         const result = await fetchUserDetail(record.id);
         detailUser.value = (result && result.user) || null;
+    } catch (error) {
+        detailUser.value = null;
+        message.error('用户详情加载失败，请稍后重试');
     } finally {
         detailLoading.value = false;
     }
@@ -94,13 +101,17 @@ const openDetail = async (record) => {
 
 const handleStatusChange = async (record) => {
     const targetEnabled = record.status === '已禁用';
-    const result = await setUserStatus({ id: record.id, enabled: targetEnabled });
-    if (!result || result.success === false) {
-        message.error((result && result.message) || '操作失败，请稍后重试');
-        return;
+    try {
+        const result = await setUserStatus({ id: record.id, enabled: targetEnabled });
+        if (!result || result.success === false) {
+            message.error((result && result.message) || '操作失败，请稍后重试');
+            return;
+        }
+        record.status = targetEnabled ? '正常' : '已禁用';
+        message.success(targetEnabled ? '已启用该用户' : '已禁用该用户');
+    } catch (error) {
+        message.error('操作失败，请稍后重试');
     }
-    record.status = targetEnabled ? '正常' : '已禁用';
-    message.success(targetEnabled ? '已启用该用户' : '已禁用该用户');
 };
 </script>
 

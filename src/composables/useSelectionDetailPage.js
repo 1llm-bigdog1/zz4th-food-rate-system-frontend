@@ -12,6 +12,7 @@ import SelectionComment from '@/models/SelectionComment';
 import { selectionListText, sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { pushRate } from '@/api/pushRate';
+import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSelection } from '@/api/getSelection';
 import { getSelectionComments } from '@/api/getSelectionComments';
@@ -21,7 +22,7 @@ import { useSyncedData } from '@/composables/useSyncedData';
 export const useSelectionDetailPage = () => {
     const route = useRoute();
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -44,7 +45,7 @@ export const useSelectionDetailPage = () => {
 
     const { data: selections } = useSyncedData(STORES.selections, getSelection);
     const routeSelectionId = Number(route.params.id);
-    const currentSelection = computed(() => selections.value.find((item) => item.id === routeSelectionId) || selections.value[0]);
+    const currentSelection = computed(() => selections.value.find((item) => item.id === routeSelectionId) || selections.value[0] || null);
     const { data: comments } = useSyncedData(STORES.selectionComments, getSelectionComments);
 
     const buildCommentTree = (items, parentId = null, level = 0) =>
@@ -52,9 +53,12 @@ export const useSelectionDetailPage = () => {
             .filter((item) => (item.reply ? item.reply['comment-id'] : null) === parentId)
             .flatMap((item) => [{ ...item, level }, ...buildCommentTree(items, item.id, level + 1)]);
 
-    const commentList = computed(() =>
-        buildCommentTree(comments.value.filter((item) => item.selection_id === currentSelection.value.id)),
-    );
+    const commentList = computed(() => {
+        if (!currentSelection.value) {
+            return [];
+        }
+        return buildCommentTree(comments.value.filter((item) => item.selection_id === currentSelection.value.id));
+    });
 
     const pagedCommentList = computed(() => {
         const start = (currentPage.value - 1) * pageSize.value;
@@ -68,7 +72,7 @@ export const useSelectionDetailPage = () => {
     const ratingTargetKey = ref('');
     const ratingTargetName = ref('');
     const targetRates = ref({
-        [`selection-${currentSelection.value.id}`]: currentSelection.value.rate,
+        [`selection-${currentSelection.value ? currentSelection.value.id : ''}`]: currentSelection.value ? currentSelection.value.rate : 0,
     });
 
     const activeReplyTarget = ref({ type: '', id: '' });
@@ -137,6 +141,8 @@ export const useSelectionDetailPage = () => {
             };
             ratingModalVisible.value = false;
             message.success(text.submitRating);
+        } catch (error) {
+            handleApiError(error, '评分提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }
@@ -179,23 +185,34 @@ export const useSelectionDetailPage = () => {
                 return;
             }
 
-            const newComment = new SelectionComment(
-                `${currentSelection.value.id}-comment-${Date.now()}`,
-                text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanReply,
-                currentSelection.value.id,
-                activeReplyTarget.value.type === 'comment'
-                    ? {
-                        'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
-                        'comment-id': activeReplyTarget.value.id,
-                    }
-                    : null,
-            );
-            comments.value.push(newComment);
-            await putRecord(STORES.selectionComments, newComment);
+            if (shouldUseMockApi()) {
+                const newComment = new SelectionComment(
+                    `${currentSelection.value.id}-comment-${Date.now()}`,
+                    text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanReply,
+                    currentSelection.value.id,
+                    activeReplyTarget.value.type === 'comment'
+                        ? {
+                            'user-id': commentList.value.find((item) => item.id === activeReplyTarget.value.id)?.user_id || '',
+                            'comment-id': activeReplyTarget.value.id,
+                        }
+                        : null,
+                );
+                comments.value.push(newComment);
+                await putRecord(STORES.selectionComments, newComment);
+            } else {
+                // 真实后端：等待增量同步拉取正式评论，避免临时 id 与后端 id 重复。
+                try {
+                    await getSelectionComments();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             cancelReply();
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

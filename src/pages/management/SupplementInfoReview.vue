@@ -54,28 +54,36 @@ const pendingReviews = ref([]);
 const reviewedReviews = ref([]);
 
 onMounted(async () => {
-    const [pendingResult, reviewedResult] = await Promise.all([
-        fetchPendingSupplementReviews(),
-        fetchSupplementReviews(),
-    ]);
-    pendingReviews.value = pendingResult.pending || [];
-    reviewedReviews.value = reviewedResult.reviewed || [];
+    try {
+        const [pendingResult, reviewedResult] = await Promise.all([
+            fetchPendingSupplementReviews(),
+            fetchSupplementReviews(),
+        ]);
+        pendingReviews.value = (pendingResult || {}).pending || [];
+        reviewedReviews.value = (reviewedResult || {}).reviewed || [];
+    } catch (error) {
+        message.error('审核列表加载失败，请稍后重试');
+    }
 });
 
 const handleReview = async (item, approved) => {
-    const result = await reviewSupplementInfo({ id: item.id, approved });
-    if (!result.success) {
-        message.error('审核提交失败');
-        return;
-    }
+    try {
+        const result = await reviewSupplementInfo({ id: item.id, approved });
+        if (!result || result.success === false) {
+            message.error('审核提交失败');
+            return;
+        }
 
-    pendingReviews.value = pendingReviews.value.filter((review) => review.id !== item.id);
-    reviewedReviews.value.unshift({
-        ...item,
-        reviewedAt: new Date().toISOString().slice(0, 10),
-        status: approved ? 'approved' : 'rejected',
-    });
-    message.success(approved ? '已通过该补充信息' : '已标记为不通过');
+        pendingReviews.value = pendingReviews.value.filter((review) => review.id !== item.id);
+        reviewedReviews.value.unshift({
+            ...item,
+            reviewedAt: new Date().toISOString().slice(0, 10),
+            status: approved ? 'approved' : 'rejected',
+        });
+        message.success(approved ? '已通过该补充信息' : '已标记为不通过');
+    } catch (error) {
+        message.error('审核提交失败，请稍后重试');
+    }
 };
 </script>
 

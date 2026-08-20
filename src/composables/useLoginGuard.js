@@ -7,7 +7,7 @@
  * 4. 开发环境无后端时由 fetchCurrentUser 返回调试用户，保证提交与评论 UI 可进行前端调试。
  */
 import { useRouter } from 'vue-router';
-import { Modal } from 'ant-design-vue';
+import { message, Modal } from 'ant-design-vue';
 import { fetchCurrentUser } from '@/utils/currentUser';
 import { useSession } from '@/composables/useSession';
 
@@ -40,8 +40,22 @@ export const useLoginGuard = () => {
         }
     };
 
+    /**
+     * 统一处理提交类 API 错误：401 弹登录提示，其它错误给出用户可见提示，避免 rejection 冒泡。
+     */
+    const handleApiError = (error, fallback = '操作失败，请稍后重试') => {
+        if (error && error.status === 401) {
+            showLoginModal();
+            return;
+        }
+        const serverMessage =
+            error && error.response && error.response.data && error.response.data.message;
+        message.error(serverMessage || fallback);
+    };
+
     return {
         ensureLoggedIn,
         showLoginModal,
+        handleApiError,
     };
 };

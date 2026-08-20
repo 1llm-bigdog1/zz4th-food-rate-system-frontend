@@ -12,6 +12,7 @@ import { putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { toggleLike as toggleLikeRequest } from '@/api/like';
+import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSuggestion } from '@/api/getSuggestion';
 import { useSyncedData } from '@/composables/useSyncedData';
@@ -21,7 +22,7 @@ import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDi
 // 食堂建议列表页的桌面端和移动端共享逻辑。
 export const useSuggestionListPage = () => {
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -49,6 +50,7 @@ export const useSuggestionListPage = () => {
         comment: '',
     });
     const submitting = ref(false);
+    const likeSubmitting = ref(false);
 
     const getUserInitial = (userId) => getDisplayInitial(userId);
 
@@ -65,9 +67,13 @@ export const useSuggestionListPage = () => {
     };
 
     const toggleLike = async (item) => {
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({ targetType: 'suggestion', targetId: item.id, userId, username });
@@ -79,6 +85,8 @@ export const useSuggestionListPage = () => {
             await putRecord(STORES.suggestions, item);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -120,19 +128,30 @@ export const useSuggestionListPage = () => {
                 return;
             }
 
-            const newSuggestion = new Suggestion(
-                Date.now(),
-                userId || text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                0,
-                [],
-            );
-            suggestions.value.unshift(newSuggestion);
-            await putRecord(STORES.suggestions, newSuggestion);
+            if (shouldUseMockApi()) {
+                const newSuggestion = new Suggestion(
+                    Date.now(),
+                    userId || text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    0,
+                    [],
+                );
+                suggestions.value.unshift(newSuggestion);
+                await putRecord(STORES.suggestions, newSuggestion);
+            } else {
+                // 真实后端：等待增量同步拉取正式记录，避免临时 id 与后端 id 重复。
+                try {
+                    await getSuggestion();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             visibleCount.value = Math.max(visibleCount.value, pageSize);
             form.value.comment = '';
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

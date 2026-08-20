@@ -70,8 +70,8 @@ const openDb = () => {
                     db.createObjectStore(name, { keyPath: 'id' });
                 }
             });
-            // 仅在数据库首次创建时写入测试数据；数据库已存在时不会重复初始化。
-            if (event.oldVersion === 0) {
+            // 测试种子数据仅允许开发/mock 环境写入；生产环境不得出现测试数据。
+            if (event.oldVersion === 0 && process.env.NODE_ENV !== 'production') {
                 seedTestData(request.transaction);
             }
         };

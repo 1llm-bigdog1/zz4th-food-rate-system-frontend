@@ -13,6 +13,8 @@ export const useSyncedData = (storeName, syncFn) => {
     onMounted(async () => {
         try {
             await syncFn();
+        } catch (error) {
+            // 同步失败时保留本地缓存数据，不抛出，避免触发全局错误页。
         } finally {
             // 同步完成后重新绑定缓存数组（同一底层数组），确保视图显示同步后的数据。
             data.value = getCached(storeName);

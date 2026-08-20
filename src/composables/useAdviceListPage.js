@@ -12,6 +12,7 @@ import { putRecord, STORES } from '@/db/indexedDB';
 import { sharedText } from '@/models/text';
 import { getReviewStatus, submitContentForReview } from '@/api/review';
 import { toggleLike as toggleLikeRequest } from '@/api/like';
+import { shouldUseMockApi } from '@/api/client';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getAdvice } from '@/api/getAdvice';
 import { useSyncedData } from '@/composables/useSyncedData';
@@ -22,7 +23,7 @@ import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDi
 // 桌面端和移动端只负责展示，不复制提交和跳转逻辑。
 export const useAdviceListPage = () => {
     const router = useRouter();
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -50,6 +51,7 @@ export const useAdviceListPage = () => {
         comment: '',
     });
     const submitting = ref(false);
+    const likeSubmitting = ref(false);
 
     const getUserInitial = (userId) => getDisplayInitial(userId);
 
@@ -66,9 +68,13 @@ export const useAdviceListPage = () => {
     };
 
     const toggleLike = async (item) => {
+        if (likeSubmitting.value) {
+            return;
+        }
         if (!(await ensureLoggedIn())) {
             return;
         }
+        likeSubmitting.value = true;
         try {
             const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({ targetType: 'advice', targetId: item.id, userId, username });
@@ -80,6 +86,8 @@ export const useAdviceListPage = () => {
             await putRecord(STORES.advices, item);
         } catch (error) {
             message.error('操作失败，请稍后重试');
+        } finally {
+            likeSubmitting.value = false;
         }
     };
 
@@ -121,19 +129,30 @@ export const useAdviceListPage = () => {
                 return;
             }
 
-            const newAdvice = new Advice(
-                Date.now(),
-                userId || text.myUserName,
-                new Date().toISOString().slice(0, 10),
-                cleanComment,
-                0,
-                [],
-            );
-            advices.value.unshift(newAdvice);
-            await putRecord(STORES.advices, newAdvice);
+            if (shouldUseMockApi()) {
+                const newAdvice = new Advice(
+                    Date.now(),
+                    userId || text.myUserName,
+                    new Date().toISOString().slice(0, 10),
+                    cleanComment,
+                    0,
+                    [],
+                );
+                advices.value.unshift(newAdvice);
+                await putRecord(STORES.advices, newAdvice);
+            } else {
+                // 真实后端：等待增量同步拉取正式记录，避免临时 id 与后端 id 重复。
+                try {
+                    await getAdvice();
+                } catch (syncError) {
+                    // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
+                }
+            }
             visibleCount.value = Math.max(visibleCount.value, pageSize);
             form.value.comment = '';
             message.success(text.submitSuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

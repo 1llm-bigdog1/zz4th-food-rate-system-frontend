@@ -8,8 +8,10 @@
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { message } from 'ant-design-vue';
 import { getUser } from '@/api/getUser';
 import { logout as requestLogout } from '@/api/logout';
+import { clearUserRegistry } from '@/utils/userDisplay';
 
 // 模块级共享状态：登录标志（布尔值），不包含 Session ID 等敏感信息。
 const isLoggedIn = ref(false);
@@ -35,18 +37,22 @@ export const useSession = () => {
 
     const markLoggedIn = () => {
         isLoggedIn.value = true;
+        clearUserRegistry();
     };
 
     const logout = async () => {
         try {
             await requestLogout();
-        } catch (error) {
-            // 退出接口失败也清除本地登录状态，避免界面与服务器状态不一致。
-        } finally {
             isLoggedIn.value = false;
+            clearUserRegistry();
             if (router.currentRoute.value.path !== '/login') {
                 router.push('/login');
             }
+            return true;
+        } catch (error) {
+            // 退出失败时保持本地登录状态，避免界面状态与后端 Session 不一致。
+            message.error('退出登录失败，请稍后重试');
+            return false;
         }
     };
 

@@ -102,8 +102,8 @@ export const setUserStatus = ({ id, enabled }) =>
 export const fetchUsers = () =>
     getJson('/admin/users', {}, {
         users: [
-            { id: 1, name: '\u540c\u5b66A', role: '\u666e\u901a\u7528\u6237', ratingCount: 8, status: '\u6b63\u5e38' },
-            { id: 2, name: '\u540c\u5b66B', role: '\u666e\u901a\u7528\u6237', ratingCount: 13, status: '\u6b63\u5e38' },
-            { id: 3, name: '\u7ba1\u7406\u5458', role: '\u7ba1\u7406\u5458', ratingCount: 0, status: '\u6b63\u5e38' },
+            { id: 1, username: '\u540c\u5b66A', role: '\u666e\u901a\u7528\u6237', ratingCount: 8, status: '\u6b63\u5e38' },
+            { id: 2, username: '\u540c\u5b66B', role: '\u666e\u901a\u7528\u6237', ratingCount: 13, status: '\u6b63\u5e38' },
+            { id: 3, username: '\u7ba1\u7406\u5458', role: '\u7ba1\u7406\u5458', ratingCount: 0, status: '\u6b63\u5e38' },
         ],
     });

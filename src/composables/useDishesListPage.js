@@ -17,7 +17,7 @@ import { getMenu } from '@/api/getMenu';
 import { useSyncedData } from '@/composables/useSyncedData';
 
 export const useDishesListPage = () => {
-    const { ensureLoggedIn } = useLoginGuard();
+    const { ensureLoggedIn, handleApiError } = useLoginGuard();
 
     const text = {
         ...sharedText,
@@ -165,6 +165,8 @@ export const useDishesListPage = () => {
             }
             ratingModalVisible.value = false;
             message.success(text.submitRating);
+        } catch (error) {
+            handleApiError(error, '评分提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }
@@ -208,6 +210,8 @@ export const useDishesListPage = () => {
             editForm.value = nextForm;
             editModalVisible.value = false;
             message.success(text.modifySuccess);
+        } catch (error) {
+            handleApiError(error, '提交失败，请稍后重试');
         } finally {
             submitting.value = false;
         }

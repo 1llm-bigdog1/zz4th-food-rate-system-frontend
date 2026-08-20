@@ -46,3 +46,10 @@ export const getDisplayInitial = (userId) => {
     const user = getDisplayUser(userId);
     return (user.nickname || user.username || '\u7528').slice(0, 1);
 };
+
+/**
+ * 清空用户注册表（登出/切换账号时调用，避免残留旧用户数据）。
+ */
+export const clearUserRegistry = () => {
+    userMap.clear();
+};

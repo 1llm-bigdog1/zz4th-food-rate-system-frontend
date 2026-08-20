@@ -51,8 +51,10 @@ export const useGlobalHeader = () => {
     const goToAccount = () => router.push('/account');
 
     const handleLogout = async () => {
-        user.value = null;
-        await logout();
+        const ok = await logout();
+        if (ok) {
+            user.value = null;
+        }
     };
 
     return {
