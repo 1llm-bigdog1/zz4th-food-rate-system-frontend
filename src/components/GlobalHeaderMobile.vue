@@ -66,6 +66,7 @@ import {
     BulbOutlined,
     CloseOutlined,
     CrownOutlined,
+    HeartOutlined,
     MenuOutlined,
     MessageOutlined,
     SettingOutlined,
@@ -91,6 +92,7 @@ const menuItems = [
     { key: 'newSuggestion', label: text.newSuggestion, icon: BulbOutlined, to: '/advice-list' },
     { key: 'canteenFeedback', label: text.canteenFeedback, icon: MessageOutlined, to: '/suggestion-list' },
     { key: 'dishManage', label: text.dishManage, icon: SettingOutlined, to: '/admin' },
+    { key: 'sponsor', label: text.sponsor, icon: HeartOutlined, to: '/sponsor' },
 ];
 </script>
 

@@ -44,6 +44,7 @@ export const globalHeaderText = {
     dishOverview: '\u83dc\u54c1\u8bc4\u5206',
     rating: '\u6211\u8981\u8bc4\u5206',
     rank: '\u8bc4\u5206\u6392\u884c\u699c',
+    sponsor: '\u8d5e\u52a9\u6211\u4eec',
     selection: '\u8001\u5403\u5bb6\u4e25\u9009',
     newSuggestion: '\u65b0\u54c1\u5efa\u8bae',
     canteenFeedback: '\u98df\u5802\u610f\u89c1',

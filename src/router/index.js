@@ -20,6 +20,7 @@ import SuggestionDetail from '../pages/suggestions/SuggestionDetail.vue';
 import DishesManagement from '../pages/management/DishesManagement.vue';
 import AdminChannel from '../pages/management/AdminChannel.vue';
 import ErrorPage from '../pages/ErrorPage.vue';
+import SponsorPage from '../pages/SponsorPage.vue';
 
 // 路由表：按页面模块分组，便于后续拆分子路由。
 const routes = [
@@ -82,6 +83,11 @@ const routes = [
     path: '/suggestion-detail/:id',
     name: 'SuggestionDetail',
     component: SuggestionDetail
+  },
+  {
+    path: '/sponsor',
+    name: 'Sponsor',
+    component: SponsorPage
   },
   {
     path: '/dishes-management',
