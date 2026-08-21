@@ -18,6 +18,7 @@ import { getAdvice } from '@/api/getAdvice';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
 import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 新品建议列表页的所有业务状态都集中在这里，
 // 桌面端和移动端只负责展示，不复制提交和跳转逻辑。
@@ -38,10 +39,11 @@ export const useAdviceListPage = () => {
         submitWarning: '请先填写建议内容',
         reply: '回复',
         likeAction: '点赞',
+        likedAction: '已点赞',
         myUserName: '我',
     };
 
-    const { data: advices } = useSyncedData(STORES.advices, getAdvice);
+    const { data: advices, reload: reloadAdvices } = useSyncedData(STORES.advices, getAdvice);
     const pageSize = 5;
     const visibleCount = ref(pageSize);
     const visibleAdvices = computed(() => advices.value.slice(0, visibleCount.value));
@@ -57,6 +59,8 @@ export const useAdviceListPage = () => {
 
     onMounted(() => {
         ensureCurrentUserRegistered();
+        // 进入页面后恢复当前用户点赞状态（未登录自动跳过）。
+        refreshLikeStatus('advice', advices.value, STORES.advices);
     });
 
     const loadMore = () => {
@@ -76,16 +80,23 @@ export const useAdviceListPage = () => {
         }
         likeSubmitting.value = true;
         try {
-            const { userId, username } = await getCurrentUserIdentity();
-            const result = await toggleLikeRequest({ targetType: 'advice', targetId: item.id, userId, username });
+            const result = await toggleLikeRequest({
+                targetType: 'advice',
+                targetId: item.id,
+                cancel: !!item.liked,
+            });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
                 return;
             }
-            item.like += 1;
+            // 以后端返回为准：liked=当前点赞状态，count=当前点赞数。
+            item.liked = !!result.liked;
+            if (typeof result.count === 'number') {
+                item.like = result.count;
+            }
             await putRecord(STORES.advices, item);
         } catch (error) {
-            message.error('操作失败，请稍后重试');
+            handleApiError(error, '操作失败，请稍后重试');
         } finally {
             likeSubmitting.value = false;
         }
@@ -144,6 +155,8 @@ export const useAdviceListPage = () => {
                 // 真实后端：等待增量同步拉取正式记录，避免临时 id 与后端 id 重复。
                 try {
                     await getAdvice();
+                    await refreshLikeStatus('advice', advices.value, STORES.advices);
+                    reloadAdvices();
                 } catch (syncError) {
                     // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
                 }

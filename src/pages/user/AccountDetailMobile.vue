@@ -31,8 +31,8 @@
                     <div class="form-row"><span>真实姓名</span><a-input v-model:value="profileForm.realname" /></div>
                     <div class="form-row"><span>性别</span><a-select v-model:value="profileForm.gender" :options="genderOptions" /></div>
                     <div class="form-row"><span>邮箱</span><a-input v-model:value="profileForm.email" /></div>
-                    <div class="form-row"><span>届别</span><a-input v-model:value="profileForm.session" /></div>
-                    <div class="form-row"><span>班级</span><a-input v-model:value="profileForm.classid" /></div>
+                    <div class="form-row"><span>届别</span><a-select v-model:value="profileForm.session" :options="sessionOptions" /></div>
+                    <div class="form-row"><span>班级</span><a-select v-model:value="profileForm.classid" :options="classidOptions" /></div>
                     <div class="form-actions">
                         <a-button block @click="cancelEditing">取消</a-button>
                         <a-button type="primary" block :loading="saving" @click="saveProfile">保存</a-button>
@@ -42,8 +42,8 @@
             <a-empty v-else description="无法获取用户信息" />
         </section>
         <section v-if="user" class="stats-card">
-            <div class="stat-row"><span>注册日期</span><strong>{{ user.register_date }}</strong></div>
-            <div class="stat-row"><span>等级</span><strong>Lv{{ user.level }}</strong></div>
+            <div class="stat-row"><span>注册时间</span><strong>{{ displayCreatedAt }}</strong></div>
+            <div class="stat-row"><span>等级</span><strong>Lv{{ displayLevel }}</strong></div>
             <div class="stat-row"><span>参与评分数量</span><strong>{{ user.rate_time }} 次</strong></div>
         </section>
     </MobilePageShell>
@@ -56,12 +56,16 @@ import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
 const {
     user,
     loading,
+    displayCreatedAt,
+    displayLevel,
     avatarPreview,
     avatarFallback,
     editing,
     saving,
     profileForm,
     genderOptions,
+    sessionOptions,
+    classidOptions,
     startEditing,
     cancelEditing,
     saveProfile,

@@ -19,6 +19,7 @@ const toSuggestionComment = (record) =>
         record.reply,
         record.parent_id ?? null,
         record.likes ?? 0,
+        record.liked ?? false,
     );
 
 export const getSuggestionComments = createSyncApi({

@@ -11,7 +11,15 @@ import { STORES } from '@/db/indexedDB';
 import Suggestion from '@/models/Suggestion';
 
 const toSuggestion = (record) =>
-    new Suggestion(record.id, record.user_id, record.date, record.comment, record.like ?? 0, record.follow_comments ?? []);
+    new Suggestion(
+        record.id,
+        record.user_id,
+        record.date,
+        record.comment,
+        record.like ?? 0,
+        record.follow_comments ?? [],
+        record.liked ?? false,
+    );
 
 export const getSuggestion = createSyncApi({
     apiName: 'getSuggestion',

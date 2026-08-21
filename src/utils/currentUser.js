@@ -26,6 +26,8 @@ export const createDebugUser = () =>
         '2026-01-01',
         0,
         'debug@example.com',
+        '2026-01-01',
+        'admin',
     );
 
 export const fetchCurrentUser = async () => {

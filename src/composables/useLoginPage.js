@@ -2,17 +2,14 @@
  * 文件说明：useLoginPage.js
  * 1. 这个脚本负责抽取登录页共享状态和提交逻辑，桌面端与移动端共用。
  * 2. 该文件位于 src\composables 目录下，是当前模块的重要基础脚本之一。
- * 3. captcha_token 仅作人机验证预留，暂不接入任何 CAPTCHA；前端不保存、不打印密码。
+ * 3. altcha 为 ALTCHA 人机验证 payload，未通过验证时不允许提交登录；
+ *    前端不保存、不打印密码与验证密钥。
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { login } from '@/api/login';
 import { useSession } from '@/composables/useSession';
-
-// 调试用户：命中时直接登录成功，不向后端发送数据。
-const DEBUG_ACCOUNT = 'admin';
-const DEBUG_PASSWORD = 'LKJ114514';
 
 export const useLoginPage = () => {
     const router = useRouter();
@@ -21,6 +18,7 @@ export const useLoginPage = () => {
     const form = ref({
         account: '',
         password: '',
+        altcha: '',
     });
     const submitting = ref(false);
 
@@ -37,6 +35,10 @@ export const useLoginPage = () => {
             message.warning('请输入密码');
             return false;
         }
+        if (!form.value.altcha) {
+            message.warning('请完成人机验证');
+            return false;
+        }
         return true;
     };
 
@@ -45,18 +47,12 @@ export const useLoginPage = () => {
             return;
         }
 
-        if (form.value.account.trim() === DEBUG_ACCOUNT && form.value.password === DEBUG_PASSWORD) {
-            markLoggedIn();
-            message.success('登录成功');
-            router.push('/');
-            return;
-        }
-
         submitting.value = true;
         try {
             const result = await login({
                 account: form.value.account.trim(),
                 password: form.value.password,
+                altcha: form.value.altcha,
             });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '登录失败，请稍后重试');

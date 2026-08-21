@@ -19,6 +19,16 @@ const genderOptions = [
     { value: '\u81ea\u5b9a\u4e49', label: '\u81ea\u5b9a\u4e49' },
 ];
 
+// 届别：2026~2030；班级：0~25（与后端校验一致）。
+const sessionOptions = Array.from({ length: 5 }, (_, i) => ({
+    value: String(2026 + i),
+    label: `${2026 + i} 届`,
+}));
+const classidOptions = Array.from({ length: 26 }, (_, i) => ({
+    value: String(i),
+    label: `${i} 班`,
+}));
+
 export const useAccountDetailPage = () => {
     const router = useRouter();
 
@@ -43,6 +53,20 @@ export const useAccountDetailPage = () => {
     const avatarFallback = computed(
         () => (user.value && (user.value.nickname || user.value.username || '用').slice(0, 1)) || '用',
     );
+
+    // 注册时间：优先 created_at（后端返回 ISO 时间），回退 register_date，避免显示 0/空。
+    const displayCreatedAt = computed(() => {
+        const raw = (user.value && (user.value.created_at || user.value.register_date)) || '';
+        if (!raw) {
+            return '-';
+        }
+        return String(raw).slice(0, 10);
+    });
+    // 等级：默认 LV1，历史数据 0/空 一律显示 Lv1。
+    const displayLevel = computed(() => {
+        const level = Number(user.value && user.value.level);
+        return Number.isInteger(level) && level >= 1 ? level : 1;
+    });
 
     const editing = ref(false);
     const saving = ref(false);
@@ -73,9 +97,25 @@ export const useAccountDetailPage = () => {
         if (saving.value) {
             return;
         }
+        const sessionValue = String(profileForm.session || '');
+        const classidValue = String(profileForm.classid || '');
+        const sessionNum = Number(sessionValue.replace(/届$/, ''));
+        const classNum = Number(classidValue.replace(/班$/, ''));
+        if (sessionValue && !(sessionNum >= 2026 && sessionNum <= 2030)) {
+            message.error('\u5c4a\u522b\u5fc5\u987b\u4e3a 2026~2030');
+            return;
+        }
+        if (classidValue && !(Number.isInteger(classNum) && classNum >= 0 && classNum <= 25)) {
+            message.error('\u73ed\u7ea7\u5fc5\u987b\u4e3a 0~25');
+            return;
+        }
         saving.value = true;
         try {
-            const result = await updateProfile({ ...profileForm });
+            const result = await updateProfile({
+                ...profileForm,
+                session: sessionValue ? String(sessionNum) : '',
+                classid: classidValue ? String(classNum) : '',
+            });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '资料保存失败，请稍后重试');
                 return;
@@ -98,11 +138,15 @@ export const useAccountDetailPage = () => {
         loading,
         avatarPreview,
         avatarFallback,
+        displayCreatedAt,
+        displayLevel,
         loadUser,
         editing,
         saving,
         profileForm,
         genderOptions,
+        sessionOptions,
+        classidOptions,
         startEditing,
         cancelEditing,
         saveProfile,

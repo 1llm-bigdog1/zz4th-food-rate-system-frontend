@@ -27,12 +27,18 @@ initLocalData().finally(() => {
         .use(Antd)
         .use(router);
     let errorPageNavigated = false;
-    app.config.errorHandler = (error) => {
+    app.config.errorHandler = (error, instance, info) => {
         // axios 错误已由 src/api/client.js 拦截器按状态码导航（403/5xx/网络错误）或
         // 由登录恢复/守卫处理（401），此处不再覆盖为 /500。
         if (error && error.isAxiosError) {
             return;
         }
+        // 已在错误页时不重复跳转；记录错误便于排查，避免页面“刷新即跳 500”。
+        const compName =
+            (instance && (instance.type && (instance.type.name || instance.type.__name))) ||
+            (instance && instance.$.type && instance.$.type.name) ||
+            'unknown';
+        console.error(`[app] unhandled error in <${compName}> (${info || 'render'}):`, error);
         if (!errorPageNavigated) {
             errorPageNavigated = true;
             router.push('/500');

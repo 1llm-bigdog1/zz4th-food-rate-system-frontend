@@ -18,6 +18,7 @@ import { getAdviceComments } from '@/api/getAdviceComments';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
 import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 建议详情页的回复树、分页和点赞逻辑由桌面/移动端共享。
 export const useAdviceDetailPage = () => {
@@ -33,6 +34,7 @@ export const useAdviceDetailPage = () => {
         commentPanelSubtitle: '围绕这条新品建议的层级讨论',
         reply: '回复',
         likeAction: '点赞',
+        likedAction: '已点赞',
         submit: '提交',
         cancelReply: '取消',
         replyAdviceTitle: '回复这条建议',
@@ -48,7 +50,7 @@ export const useAdviceDetailPage = () => {
     const { data: advices } = useSyncedData(STORES.advices, getAdvice);
     const currentAdviceId = Number(route.params.id);
     const currentAdvice = computed(() => advices.value.find((item) => item.id === currentAdviceId) || advices.value[0] || null);
-    const { data: comments } = useSyncedData(STORES.adviceComments, getAdviceComments);
+    const { data: comments, reload: reloadComments } = useSyncedData(STORES.adviceComments, getAdviceComments);
     const activeReplyTarget = ref({ type: '', id: '' });
     const replyContent = ref('');
     const submitting = ref(false);
@@ -88,6 +90,8 @@ export const useAdviceDetailPage = () => {
 
     onMounted(() => {
         ensureCurrentUserRegistered();
+        refreshLikeStatus('advice', [currentAdvice.value].filter(Boolean), STORES.advices);
+        refreshLikeStatus('advice-comment', comments.value, STORES.adviceComments);
     });
 
     const goBack = () => {
@@ -113,21 +117,22 @@ export const useAdviceDetailPage = () => {
         }
         likeSubmitting.value = true;
         try {
-            const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
                 targetType: 'advice',
                 targetId: currentAdvice.value.id,
-                userId,
-                username,
+                cancel: !!currentAdvice.value.liked,
             });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
                 return;
             }
-            currentAdvice.value.like += 1;
+            currentAdvice.value.liked = !!result.liked;
+            if (typeof result.count === 'number') {
+                currentAdvice.value.like = result.count;
+            }
             await putRecord(STORES.advices, currentAdvice.value);
         } catch (error) {
-            message.error('操作失败，请稍后重试');
+            handleApiError(error, '操作失败，请稍后重试');
         } finally {
             likeSubmitting.value = false;
         }
@@ -146,21 +151,22 @@ export const useAdviceDetailPage = () => {
         }
         likeSubmitting.value = true;
         try {
-            const { userId, username } = await getCurrentUserIdentity();
             const result = await toggleLikeRequest({
                 targetType: 'advice-comment',
                 targetId: commentId,
-                userId,
-                username,
+                cancel: !!target.liked,
             });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '操作失败，请稍后重试');
                 return;
             }
-            target.likes += 1;
+            target.liked = !!result.liked;
+            if (typeof result.count === 'number') {
+                target.likes = result.count;
+            }
             await putRecord(STORES.adviceComments, target);
         } catch (error) {
-            message.error('操作失败，请稍后重试');
+            handleApiError(error, '操作失败，请稍后重试');
         } finally {
             likeSubmitting.value = false;
         }
@@ -222,6 +228,8 @@ export const useAdviceDetailPage = () => {
                 // 真实后端：等待增量同步拉取正式评论，避免临时 id 与后端 id 重复。
                 try {
                     await getAdviceComments();
+                    await refreshLikeStatus('advice-comment', comments.value, STORES.adviceComments);
+                    reloadComments();
                 } catch (syncError) {
                     // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
                 }

@@ -5,7 +5,7 @@
  * 3. 维护这类文件时，应尽量保持字段命名、默认值和导出方式一致，方便全项目复用。
  */
 export default class Suggestion_Comment {
-    constructor(id, user_id, date, suggestion_id, reply, parent_id = null, likes = 0) {
+    constructor(id, user_id, date, suggestion_id, reply, parent_id = null, likes = 0, liked = false) {
         this.id = id;
         this.user_id = user_id;
         this.date = date;
@@ -13,5 +13,6 @@ export default class Suggestion_Comment {
         this.parent_id = parent_id;
         this.likes = likes;
         this.reply = reply;
+        this.liked = liked;
     }
 }

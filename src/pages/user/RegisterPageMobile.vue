@@ -13,8 +13,7 @@
             <a-input-password v-model:value="form.password" size="large" placeholder="请输入密码" />
             <a-input-password v-model:value="form.confirmPassword" size="large" placeholder="请再次输入密码" @pressEnter="submitRegister" />
             <div class="captcha-placeholder">
-                <span class="captcha-title">人机验证预留区域</span>
-                <span class="captcha-hint">后续可接入验证码组件</span>
+                <AltchaWidget v-model="form.altcha" />
             </div>
             <a-button type="primary" block size="large" :loading="submitting" @click="submitRegister">注册</a-button>
             <a-button type="link" class="text-link" @click="goToLogin">已有账号，去登录</a-button>
@@ -25,6 +24,7 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import badgeLogo from '@/static/badge.png';
+import AltchaWidget from '@/components/AltchaWidget.vue';
 import { useRegisterPage } from '@/composables/useRegisterPage';
 
 const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
@@ -33,8 +33,6 @@ const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
 <style scoped>
 .auth-card { display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid #e8eaed; border-radius: 20px; background: #fff; }
 .logo-image { width: 56px; height: 56px; object-fit: contain; }
-.captcha-placeholder { border: 2px dashed #f59e0b; border-radius: 14px; background: #fff7ed; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
-.captcha-title { color: #c2410c; font-size: 14px; font-weight: 600; }
-.captcha-hint { color: #9a3412; font-size: 12px; line-height: 1.35; }
+.captcha-placeholder { display: flex; align-items: center; }
 .text-link { padding: 0; text-align: left; justify-content: flex-start; }
 </style>

@@ -42,8 +42,8 @@
 
                             <template #actions>
                                 <span class="comment-action" @click.stop="goToAdviceDetail(item)">{{ text.reply }}</span>
-                                <span class="comment-action" @click.stop="toggleLike(item)">
-                                    {{ text.likeAction }}({{ item.like }})
+                                <span class="comment-action" :class="{ 'liked': item.liked }" @click.stop="toggleLike(item)">
+                                    {{ item.liked ? text.likedAction : text.likeAction }}({{ item.like }})
                                 </span>
                             </template>
                         </a-comment>
@@ -236,6 +236,11 @@ const {
     color: #595959;
     transition: color 0.2s ease;
     cursor: pointer;
+}
+
+.comment-action.liked {
+    color: #1677ff;
+    font-weight: 600;
 }
 
 .comment-action:hover {

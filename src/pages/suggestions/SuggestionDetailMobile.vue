@@ -18,7 +18,7 @@
                     <div class="user-name">{{ displayUser(currentSuggestion.user_id).username }}</div>
                     <div class="meta-date">{{ currentSuggestion.date }}</div>
                 </div>
-                <button type="button" class="like-button" @click="toggleSuggestionLike">{{ text.likeAction }} {{ currentSuggestion.like }}</button>
+                <button type="button" class="like-button" :class="{ liked: currentSuggestion.liked }" @click="toggleSuggestionLike">{{ currentSuggestion.liked ? text.likedAction : text.likeAction }} {{ currentSuggestion.like }}</button>
             </div>
             <div class="comment-body">{{ currentSuggestion.comment }}</div>
             <a-button block @click="openReplyBox('suggestion', currentSuggestion.id)">{{ text.reply }}</a-button>
@@ -45,7 +45,7 @@
                             <div class="user-name">{{ displayUser(item.user_id).username }}</div>
                             <div class="meta-date">{{ item.date }}</div>
                         </div>
-                        <button type="button" class="like-button" @click="toggleCommentLike(item.id)">{{ item.likes }}</button>
+                        <button type="button" class="like-button" :class="{ liked: item.liked }" @click="toggleCommentLike(item.id)">{{ item.liked ? text.likedAction : text.likeAction }} {{ item.likes }}</button>
                     </div>
                     <div v-if="item.replyTargetUser" class="reply-target">@{{ item.replyTargetUser }}</div>
                     <div class="comment-body">{{ item.reply }}</div>
@@ -87,6 +87,7 @@ const { text, currentSuggestion, pagedCommentList, commentList, replyContent, su
 .user-name { color: #202124; font-size: 15px; font-weight: 700; }
 .meta-date, .section-subtitle { color: #5f6368; font-size: 12px; }
 .like-button { border: 0; border-radius: 999px; padding: 6px 10px; background: #f6ffed; color: #389e0d; }
+.like-button.liked { background: #e8f0fe; color: #1a73e8; }
 .comment-body { color: #3c4043; line-height: 1.7; white-space: pre-wrap; }
 .reply-actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
 .reply-box { margin-top: 14px; }

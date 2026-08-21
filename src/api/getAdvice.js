@@ -11,7 +11,15 @@ import { STORES } from '@/db/indexedDB';
 import Advice from '@/models/Advice';
 
 const toAdvice = (record) =>
-    new Advice(record.id, record.user_id, record.date, record.comment, record.like ?? 0, record.follow_comments ?? []);
+    new Advice(
+        record.id,
+        record.user_id,
+        record.date,
+        record.comment,
+        record.like ?? 0,
+        record.follow_comments ?? [],
+        record.liked ?? false,
+    );
 
 export const getAdvice = createSyncApi({
     apiName: 'getAdvice',

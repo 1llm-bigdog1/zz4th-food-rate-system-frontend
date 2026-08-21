@@ -20,8 +20,7 @@
                         <a-input v-model:value="form.account" size="large" placeholder="请输入你的用户名" class="account-input" @pressEnter="submitLogin" />
                         <a-input-password v-model:value="form.password" size="large" placeholder="请输入你的密码" class="password-input" @pressEnter="submitLogin" />
                         <div class="captcha-placeholder">
-                            <span class="captcha-title">人机验证预留区域</span>
-                            <span class="captcha-hint">后续可接入滑块或图形验证码组件</span>
+                            <AltchaWidget v-model="form.altcha" />
                         </div>
                         <a-button type="link" class="link-btn">忘记了密码？</a-button>
                         <!-- <a-button type="link" class="forum-auth-btn">校园论坛授权登录</a-button> -->
@@ -38,6 +37,7 @@
 
 <script setup>
 import badgeLogo from '@/static/badge.png';
+import AltchaWidget from '@/components/AltchaWidget.vue';
 import { useLoginPage } from '@/composables/useLoginPage';
 
 const { form, submitting, submitLogin, goToRegister } = useLoginPage();
@@ -56,9 +56,7 @@ const { form, submitting, submitLogin, goToRegister } = useLoginPage();
 #login-page :deep(.account-input .ant-input) { height: 58px; border-color: var(--input-border); border-radius: 14px; font-size: 17px; }
 #login-page :deep(.password-input) { margin-top: 16px; }
 #login-page :deep(.password-input .ant-input-affix-wrapper) { height: 58px; border-color: var(--input-border); border-radius: 14px; font-size: 17px; }
-.captcha-placeholder { margin-top: 16px; min-height: 76px; border: 2px dashed #f59e0b; border-radius: 14px; background: #fff7ed; padding: 10px 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.captcha-title { color: #c2410c; font-size: 14px; font-weight: 600; }
-.captcha-hint { color: #9a3412; font-size: 12px; line-height: 1.35; }
+.captcha-placeholder { margin-top: 16px; min-height: 40px; display: flex; align-items: center; }
 .link-btn, .create-btn { margin-top: 14px; padding: 0; color: var(--link-color); font-size: 14px; font-weight: 500; }
 .forum-auth-btn { margin-top: 4px; padding: 0; color: #d97706; font-size: 14px; font-weight: 500; text-align: left; }
 .actions { margin-top: 24px; display: flex; align-items: center; justify-content: flex-end; gap: 20px; }

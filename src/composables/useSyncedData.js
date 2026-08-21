@@ -10,18 +10,26 @@ import { getCached } from '@/db/indexedDB';
 export const useSyncedData = (storeName, syncFn) => {
     const data = ref(getCached(storeName));
 
+    // 重新读取缓存并绑定新数组副本，强制视图刷新（提交后直接同步数据时使用）。
+    const reload = () => {
+        data.value = getCached(storeName).slice();
+    };
+
     onMounted(async () => {
         try {
             await syncFn();
         } catch (error) {
             // 同步失败时保留本地缓存数据，不抛出，避免触发全局错误页。
         } finally {
-            // 同步完成后重新绑定缓存数组（同一底层数组），确保视图显示同步后的数据。
-            data.value = getCached(storeName);
+            // 同步完成后重新绑定缓存数组的“副本”：
+            // 直接绑定同一数组引用时 Vue 无法感知原地增删，视图会停留在旧数据
+            // （例如审核通过的新内容不显示、列表残留种子数据）。
+            reload();
         }
     });
 
     return {
         data,
+        reload,
     };
 };

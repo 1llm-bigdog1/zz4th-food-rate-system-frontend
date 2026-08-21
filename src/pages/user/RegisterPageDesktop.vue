@@ -20,8 +20,7 @@
                         <a-input-password v-model:value="form.password" size="large" placeholder="请输入密码" class="password-input" />
                         <a-input-password v-model:value="form.confirmPassword" size="large" placeholder="请再次输入密码" class="input-gap password-input" @pressEnter="submitRegister" />
                         <div class="captcha-placeholder">
-                            <span class="captcha-title">人机验证预留区域</span>
-                            <span class="captcha-hint">后续可接入滑块或图形验证码组件</span>
+                            <AltchaWidget v-model="form.altcha" />
                         </div>
                         <div class="actions">
                             <a-button type="link" class="create-btn" @click="goToLogin">已有账号，去登录</a-button>
@@ -36,6 +35,7 @@
 
 <script setup>
 import badgeLogo from '@/static/badge.png';
+import AltchaWidget from '@/components/AltchaWidget.vue';
 import { useRegisterPage } from '@/composables/useRegisterPage';
 
 const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
@@ -54,9 +54,7 @@ const { form, submitting, submitRegister, goToLogin } = useRegisterPage();
 #register-page :deep(.account-input .ant-input), #register-page :deep(.input-gap .ant-input) { height: 58px; border-color: var(--input-border); border-radius: 14px; font-size: 17px; }
 #register-page :deep(.input-gap), #register-page :deep(.password-input) { margin-top: 16px; }
 #register-page :deep(.password-input .ant-input-affix-wrapper) { height: 58px; border-color: var(--input-border); border-radius: 14px; font-size: 17px; }
-.captcha-placeholder { margin-top: 16px; min-height: 76px; border: 2px dashed #f59e0b; border-radius: 14px; background: #fff7ed; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.captcha-title { color: #c2410c; font-size: 14px; font-weight: 600; }
-.captcha-hint { color: #9a3412; font-size: 12px; line-height: 1.35; }
+.captcha-placeholder { margin-top: 16px; min-height: 40px; display: flex; align-items: center; }
 .create-btn { margin-top: 14px; padding: 0; color: var(--link-color); font-size: 14px; font-weight: 500; }
 .actions { margin-top: 24px; display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
 .next-btn { min-width: 96px; height: 42px; font-size: 14px; padding: 0 22px; background: var(--primary-color); }

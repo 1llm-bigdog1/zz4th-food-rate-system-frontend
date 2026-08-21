@@ -3,7 +3,8 @@
  *
  * - 接口：GET /user（配合 @/api/client.js 的 baseURL `/api`，实际请求 /api/user）
  * - 认证方式：沿用现有 apiClient（同源请求默认携带 Cookie，未额外配置凭证）。
- * - 响应适配：支持直接返回用户对象，或 { success: true, user: {...} } / { success: true, data: {...} } 包装结构；
+ * - 响应适配：支持直接返回用户对象，或 { success: true, user: {...} } /
+ *   { success: true, data: { user: {...} } } 包装结构（当前后端契约）；
  *   返回数据按当前 src/models/User.js 的字段实例化为 User。
  * - HTTP 错误：抛出带 status 的 Error（如 401 时 error.status === 401，供登录恢复判断未登录）。
  * - 不在 API 层保存用户数据到 localStorage/sessionStorage。
@@ -25,6 +26,8 @@ const toUser = (data) =>
         data.register_date,
         data.rate_time,
         data.email,
+        data.created_at,
+        data.role,
     );
 
 export const getUser = async () => {
@@ -50,6 +53,7 @@ export const getUser = async () => {
         throw new Error((data && data.message) || '获取用户信息失败');
     }
 
-    const userData = data.user || data.data || data;
+    // 当前后端返回 { success, data: { user } }；兼容 { user } / 直接返回用户对象的旧契约。
+    const userData = data.user || (data.data && data.data.user) || data;
     return toUser(userData);
 };

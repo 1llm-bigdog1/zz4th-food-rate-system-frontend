@@ -2,17 +2,13 @@
  * 文件说明：useRegisterPage.js
  * 1. 这个脚本负责抽取注册页共享状态和提交逻辑，桌面端与移动端共用。
  * 2. 该文件位于 src\composables 目录下，是当前模块的重要基础脚本之一。
- * 3. 注册时电子邮箱可选，其余必填；captcha_token 仅作人机验证预留，暂不接入任何 CAPTCHA；
- *    前端不保存、不打印密码。
+ * 3. 注册时电子邮箱可选，其余必填；altcha 为 ALTCHA 人机验证 payload，
+ *    未通过验证时不允许提交注册；前端不保存、不打印密码与验证密钥。
  */
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { register } from '@/api/register';
-
-// 调试用户：命中时直接注册成功，不向后端发送数据。
-const DEBUG_USERNAME = 'admin';
-const DEBUG_PASSWORD = 'LKJ114514';
 
 export const useRegisterPage = () => {
     const router = useRouter();
@@ -22,6 +18,7 @@ export const useRegisterPage = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        altcha: '',
     });
     const submitting = ref(false);
 
@@ -50,17 +47,15 @@ export const useRegisterPage = () => {
             message.warning('两次输入的密码不一致');
             return false;
         }
+        if (!form.value.altcha) {
+            message.warning('请完成人机验证');
+            return false;
+        }
         return true;
     };
 
     const submitRegister = async () => {
         if (submitting.value || !validate()) {
-            return;
-        }
-
-        if (form.value.username.trim() === DEBUG_USERNAME && form.value.password === DEBUG_PASSWORD) {
-            message.success('注册成功');
-            router.push('/');
             return;
         }
 
@@ -70,6 +65,7 @@ export const useRegisterPage = () => {
                 username: form.value.username.trim(),
                 email: form.value.email.trim() || null,
                 password: form.value.password,
+                altcha: form.value.altcha,
             });
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '注册失败，请稍后重试');

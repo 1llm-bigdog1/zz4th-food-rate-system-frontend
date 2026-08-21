@@ -17,6 +17,7 @@ import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSelection } from '@/api/getSelection';
 import { getSelectionComments } from '@/api/getSelectionComments';
 import { useSyncedData } from '@/composables/useSyncedData';
+import { getDisplayInitial } from '@/utils/userDisplay';
 
 // 严选详情页包含回复树和针对主贴/评论的评分状态。
 export const useSelectionDetailPage = () => {
@@ -46,7 +47,7 @@ export const useSelectionDetailPage = () => {
     const { data: selections } = useSyncedData(STORES.selections, getSelection);
     const routeSelectionId = Number(route.params.id);
     const currentSelection = computed(() => selections.value.find((item) => item.id === routeSelectionId) || selections.value[0] || null);
-    const { data: comments } = useSyncedData(STORES.selectionComments, getSelectionComments);
+    const { data: comments, reload: reloadComments } = useSyncedData(STORES.selectionComments, getSelectionComments);
 
     const buildCommentTree = (items, parentId = null, level = 0) =>
         items
@@ -84,7 +85,7 @@ export const useSelectionDetailPage = () => {
 
     const getSelectionTargetKey = (id) => `selection-${id}`;
     const getCommentTargetKey = (id) => `comment-${id}`;
-    const getUserInitial = (userId) => userId.slice(0, 1);
+    const getUserInitial = (userId) => getDisplayInitial(userId);
     const formatPosition = (pos) => `${text.purchasePrefix}${pos.floor}${text.floor}(${pos.window}${text.window})`;
     const getTargetRate = (key) => targetRates.value[key] ?? 0;
     const isReplyingTo = (type, id) => activeReplyTarget.value.type === type && activeReplyTarget.value.id === id;
@@ -205,6 +206,7 @@ export const useSelectionDetailPage = () => {
                 // 真实后端：等待增量同步拉取正式评论，避免临时 id 与后端 id 重复。
                 try {
                     await getSelectionComments();
+                    reloadComments();
                 } catch (syncError) {
                     // 提交已成功，同步失败不阻塞，内容稍后经同步显示。
                 }

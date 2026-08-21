@@ -44,6 +44,7 @@ import { onMounted, ref } from 'vue';
 import { message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { verifyAdminPassword } from '@/api/admin';
+import { getUser } from '@/api/getUser';
 import DishesManagement from '@/pages/management/DishesManagement.vue';
 import SupplementInfoReview from '@/pages/management/SupplementInfoReview.vue';
 import UserList from '@/pages/management/UserList.vue';
@@ -72,6 +73,19 @@ const submitPassword = async () => {
 
     if (!result || !result.success) {
         passwordError.value = '密码错误，请重新输入';
+        return;
+    }
+
+    // 密码验证通过后，还需确认当前后端 Session 是管理员角色：
+    // 管理员接口由后端按 Session + role=admin 鉴权，未登录/普通用户访问仍会 403。
+    try {
+        const user = await getUser();
+        if (!user || user.role !== 'admin') {
+            passwordError.value = '当前账号不是管理员，请先使用管理员账号登录';
+            return;
+        }
+    } catch (error) {
+        passwordError.value = '请先使用管理员账号登录';
         return;
     }
 

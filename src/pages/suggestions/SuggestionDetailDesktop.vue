@@ -30,7 +30,7 @@
                 <template #content><div class="suggestion-comment-box detail-comment-box">{{ currentSuggestion.comment }}</div></template>
                 <template #actions>
                     <span class="comment-action" @click="openReplyBox('suggestion', currentSuggestion.id)">{{ text.reply }}</span>
-                    <span class="comment-action" @click="toggleSuggestionLike">{{ text.likeAction }}({{ currentSuggestion.like }})</span>
+                    <span class="comment-action" :class="{ 'liked': currentSuggestion.liked }" @click="toggleSuggestionLike">{{ currentSuggestion.liked ? text.likedAction : text.likeAction }}({{ currentSuggestion.like }})</span>
                 </template>
             </a-comment>
             <div v-if="isReplyingTo('suggestion', currentSuggestion.id)" class="reply-editor">
@@ -68,7 +68,7 @@
                                 </template>
                                 <template #actions>
                                     <span class="comment-action" @click="openReplyBox('comment', item.id)">{{ text.reply }}</span>
-                                    <span class="comment-action" @click="toggleCommentLike(item.id)">{{ text.likeAction }}({{ item.likes }})</span>
+                                    <span class="comment-action" :class="{ 'liked': item.liked }" @click="toggleCommentLike(item.id)">{{ item.liked ? text.likedAction : text.likeAction }}({{ item.likes }})</span>
                                 </template>
                             </a-comment>
                             <div v-if="isReplyingTo('comment', item.id)" class="reply-editor inline-reply-editor" :style="{ marginLeft: `${item.level * 64 + 64}px` }">
@@ -123,6 +123,7 @@ const { text, currentSuggestion, pagedCommentList, commentList, replyContent, su
 .reply-target { margin-bottom: 8px; color: #1677ff; font-size: 13px; font-weight: 600; }
 .detail-comment-box { font-size: 15px; min-height: 120px; }
 .comment-action { color: #595959; cursor: pointer; }
+.comment-action.liked { color: #1677ff; font-weight: 600; }
 .reply-editor { margin-top: 16px; padding: 18px; border: 1px solid #f0f0f0; border-radius: 16px; background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%); }
 .inline-reply-editor { margin-left: 64px; }
 .section-title { margin-bottom: 8px; color: #1f1f1f; font-weight: 600; font-size: 14px; }

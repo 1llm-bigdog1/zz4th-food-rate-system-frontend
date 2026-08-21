@@ -42,8 +42,8 @@
                                     <div class="form-row"><span class="info-label">真实姓名</span><a-input v-model:value="profileForm.realname" /></div>
                                     <div class="form-row"><span class="info-label">性别</span><a-select v-model:value="profileForm.gender" :options="genderOptions" style="width: 180px" /></div>
                                     <div class="form-row"><span class="info-label">邮箱</span><a-input v-model:value="profileForm.email" /></div>
-                                    <div class="form-row"><span class="info-label">届别</span><a-input v-model:value="profileForm.session" /></div>
-                                    <div class="form-row"><span class="info-label">班级</span><a-input v-model:value="profileForm.classid" /></div>
+                                    <div class="form-row"><span class="info-label">届别</span><a-select v-model:value="profileForm.session" :options="sessionOptions" style="width: 180px" /></div>
+                                    <div class="form-row"><span class="info-label">班级</span><a-select v-model:value="profileForm.classid" :options="classidOptions" style="width: 180px" /></div>
                                     <div class="form-actions">
                                         <a-button @click="cancelEditing">取消</a-button>
                                         <a-button type="primary" :loading="saving" @click="saveProfile">保存</a-button>
@@ -51,8 +51,8 @@
                                 </div>
                                 <a-divider />
                                 <a-row :gutter="[14, 14]">
-                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><a-statistic title="注册日期" :value="user.register_date" /></a-card></a-col>
-                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><div class="level-title">等级</div><a-tag color="blue" class="level-text">Lv{{ user.level }}</a-tag></a-card></a-col>
+                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><a-statistic title="注册时间" :value="displayCreatedAt" /></a-card></a-col>
+                                    <a-col :xs="24" :sm="12"><a-card size="small" class="info-card"><div class="level-title">等级</div><a-tag color="blue" class="level-text">Lv{{ displayLevel }}</a-tag></a-card></a-col>
                                     <a-col :xs="24"><a-card size="small" class="info-card"><a-statistic title="参与评分数量" :value="user.rate_time" suffix="次" /></a-card></a-col>
                                 </a-row>
                             </template>
@@ -72,12 +72,16 @@ import { useAccountDetailPage } from '@/composables/useAccountDetailPage';
 const {
     user,
     loading,
+    displayCreatedAt,
+    displayLevel,
     avatarPreview,
     avatarFallback,
     editing,
     saving,
     profileForm,
     genderOptions,
+    sessionOptions,
+    classidOptions,
     startEditing,
     cancelEditing,
     saveProfile,

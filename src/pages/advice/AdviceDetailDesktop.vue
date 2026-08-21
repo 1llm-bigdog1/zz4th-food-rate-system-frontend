@@ -45,7 +45,7 @@
 
                 <template #actions>
                     <span class="comment-action" @click="openReplyBox('advice', currentAdvice.id)">{{ text.reply }}</span>
-                    <span class="comment-action" @click="toggleAdviceLike">{{ text.likeAction }}({{ currentAdvice.like }})</span>
+                    <span class="comment-action" :class="{ 'liked': currentAdvice.liked }" @click="toggleAdviceLike">{{ currentAdvice.liked ? text.likedAction : text.likeAction }}({{ currentAdvice.like }})</span>
                 </template>
             </a-comment>
 
@@ -97,7 +97,7 @@
 
                                 <template #actions>
                                     <span class="comment-action" @click="openReplyBox('comment', item.id)">{{ text.reply }}</span>
-                                    <span class="comment-action" @click="toggleCommentLike(item.id)">{{ text.likeAction }}({{ item.likes }})</span>
+                                    <span class="comment-action" :class="{ 'liked': item.liked }" @click="toggleCommentLike(item.id)">{{ item.liked ? text.likedAction : text.likeAction }}({{ item.likes }})</span>
                                 </template>
                             </a-comment>
 
@@ -193,6 +193,7 @@ const {
 .detail-comment-box { font-size: 15px; min-height: 120px; }
 .comment-action { color: #595959; transition: color .2s ease; cursor: pointer; }
 .comment-action:hover { color: #1677ff; }
+.comment-action.liked { color: #1677ff; font-weight: 600; }
 .reply-editor { margin-top: 16px; padding: 18px; border: 1px solid #f0f0f0; border-radius: 16px; background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%); }
 .inline-reply-editor { margin-left: 64px; }
 .section-title { margin-bottom: 8px; color: #1f1f1f; font-weight: 600; font-size: 14px; }

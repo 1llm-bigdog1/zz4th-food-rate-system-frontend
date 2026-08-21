@@ -22,8 +22,8 @@
                         <div class="user-name">{{ displayUser(item.user_id).username }}</div>
                         <div class="meta-date">{{ item.date }}</div>
                     </div>
-                    <button type="button" class="like-button" @click.stop="toggleLike(item)">
-                        {{ text.likeAction }} {{ item.like }}
+                    <button type="button" class="like-button" :class="{ liked: item.liked }" @click.stop="toggleLike(item)">
+                        {{ item.liked ? text.likedAction : text.likeAction }} {{ item.like }}
                     </button>
                 </div>
                 <div class="comment-body">{{ item.comment }}</div>
@@ -127,6 +127,11 @@ const {
     padding: 6px 10px;
     background: #f6ffed;
     color: #389e0d;
+}
+
+.like-button.liked {
+    background: #e8f0fe;
+    color: #1a73e8;
 }
 
 .comment-body {
