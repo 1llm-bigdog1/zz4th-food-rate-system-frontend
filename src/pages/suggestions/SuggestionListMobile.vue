@@ -16,10 +16,10 @@
                 <div class="card-top">
                     <div class="author-chip">
                         <img v-if="displayAvatar(item.user_id)" :src="displayAvatar(item.user_id)" alt="" class="chip-avatar" />
-                        <span v-else>{{ getUserInitial(item.user_id) }}</span>
+                        <span v-else>{{ getUserInitial(item) }}</span>
                     </div>
                     <div class="card-headings">
-                        <div class="user-name">{{ displayUser(item.user_id).username }}</div>
+                        <div class="user-name">{{ item.nickname || '同学' }}</div>
                         <div class="meta-date">{{ item.date }}</div>
                     </div>
                     <button type="button" class="like-button" :class="{ liked: item.liked }" @click.stop="toggleLike(item)">
@@ -54,7 +54,6 @@ const {
     visibleSuggestions,
     hasMore,
     getUserInitial,
-    displayUser,
     displayAvatar,
     loadMore,
     goToSuggestionDetail,

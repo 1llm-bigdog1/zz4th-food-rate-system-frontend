@@ -35,7 +35,7 @@
                     <template v-if="column.key === 'rate'">
                         <span class="table-rate">
                             <a-rate :value="record.rate" disabled allow-half />
-                            <span class="table-rate-number">{{ record.rate }}</span>
+                            <span class="table-rate-number">{{ record.rate }}（{{ record.rate_count }}次）</span>
                         </span>
                     </template>
                     <template v-else-if="column.key === 'imagePreview'">

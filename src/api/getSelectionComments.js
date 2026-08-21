@@ -11,7 +11,15 @@ import { STORES } from '@/db/indexedDB';
 import SelectionComment from '@/models/SelectionComment';
 
 const toSelectionComment = (record) =>
-    new SelectionComment(record.id, record.user_id, record.date, record.detail, record.selection_id, record.reply ?? null);
+    new SelectionComment(
+        record.id,
+        record.user_id,
+        record.date,
+        record.detail,
+        record.selection_id,
+        record.reply ?? null,
+        record.nickname ?? '',
+    );
 
 export const getSelectionComments = createSyncApi({
     apiName: 'getSelectionComments',

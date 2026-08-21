@@ -20,6 +20,8 @@ const toSelection = (record) =>
         record.position ?? [],
         record.rate ?? 0,
         record.follow_comments ?? [],
+        record.nickname ?? '',
+        record.rate_count ?? 0,
     );
 
 export const getSelection = createSyncApi({

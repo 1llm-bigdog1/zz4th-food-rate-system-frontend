@@ -17,7 +17,7 @@ import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSuggestion } from '@/api/getSuggestion';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
-import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayUser } from '@/utils/userDisplay';
 import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 食堂建议列表页的桌面端和移动端共享逻辑。
@@ -54,7 +54,7 @@ export const useSuggestionListPage = () => {
     const submitting = ref(false);
     const likeSubmitting = ref(false);
 
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
 
     onMounted(() => {
         ensureCurrentUserRegistered();

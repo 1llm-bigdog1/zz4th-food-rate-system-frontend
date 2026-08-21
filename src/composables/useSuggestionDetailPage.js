@@ -17,7 +17,7 @@ import { getSuggestion } from '@/api/getSuggestion';
 import { getSuggestionComments } from '@/api/getSuggestionComments';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
-import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayUser } from '@/utils/userDisplay';
 import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 食堂建议详情页与新品建议详情页结构一致，但数据源不同。
@@ -85,7 +85,7 @@ export const useSuggestionDetailPage = () => {
         return commentList.value.slice(start, start + pageSize.value);
     });
 
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
     const isReplyingTo = (type, id) => activeReplyTarget.value.type === type && activeReplyTarget.value.id === id;
 
     onMounted(() => {

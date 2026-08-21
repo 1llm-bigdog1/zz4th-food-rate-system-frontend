@@ -18,11 +18,11 @@
             </div>
             <a-comment class="suggestion-comment detail-comment">
                 <template #avatar>
-                    <a-avatar :size="56" class="user-avatar" :src="displayAvatar(currentSuggestion.user_id)">{{ getUserInitial(currentSuggestion.user_id) }}</a-avatar>
+                    <a-avatar :size="56" class="user-avatar" :src="displayAvatar(currentSuggestion.user_id)">{{ getUserInitial(currentSuggestion) }}</a-avatar>
                 </template>
                 <template #author>
                     <div class="comment-author-row">
-                        <span class="user-name">{{ displayUser(currentSuggestion.user_id).username }}</span>
+                        <span class="user-name">{{ currentSuggestion.nickname || '同学' }}</span>
                         <span class="like-pill"><like-filled />{{ currentSuggestion.like }}</span>
                     </div>
                 </template>
@@ -52,10 +52,10 @@
                     <a-list-item class="comment-list-item" :class="{ 'nested-comment-item': item.level > 0 }">
                         <div class="comment-thread">
                             <a-comment class="suggestion-comment" :style="{ marginLeft: `${item.level * 64}px` }">
-                                <template #avatar><a-avatar :size="48" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item.user_id) }}</a-avatar></template>
+                                <template #avatar><a-avatar :size="48" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item) }}</a-avatar></template>
                                 <template #author>
                                     <div class="comment-author-row">
-                                        <span class="user-name comment-user-name">{{ displayUser(item.user_id).username }}</span>
+                                        <span class="user-name comment-user-name">{{ item.nickname || '同学' }}</span>
                                         <span class="like-pill like-pill-small"><like-filled />{{ item.likes }}</span>
                                     </div>
                                 </template>
@@ -94,7 +94,7 @@
 <script setup>
 import { LeftOutlined, LikeFilled } from '@ant-design/icons-vue';
 import { useSuggestionDetailPage } from '@/composables/useSuggestionDetailPage';
-const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, displayUser, displayAvatar, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
+const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, displayAvatar, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
 </script>
 
 <style scoped>

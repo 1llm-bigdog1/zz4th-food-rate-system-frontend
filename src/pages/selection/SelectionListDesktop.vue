@@ -17,12 +17,12 @@
                     <a-list-item class="selection-list-item">
                         <a-comment class="selection-comment selection-comment-link" @click="goToSelectionDetail(item)">
                             <template #avatar>
-                                <a-avatar :size="52" class="user-avatar">{{ getUserInitial(item.user_id) }}</a-avatar>
+                                <a-avatar :size="52" class="user-avatar">{{ getUserInitial(item) }}</a-avatar>
                             </template>
 
                             <template #author>
                                 <div class="comment-author-row">
-                                    <span class="user-name">{{ item.user_id }}</span>
+                                    <span class="user-name">{{ item.nickname || '同学' }}</span>
                                     <a-rate :value="item.rate" disabled allow-half class="inline-rate" />
                                     <span class="reply-rate-number">{{ item.rate }}</span>
                                 </div>

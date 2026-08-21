@@ -17,12 +17,12 @@
                     <a-list-item class="suggestion-list-item">
                         <a-comment class="suggestion-comment suggestion-comment-link" @click="goToSuggestionDetail(item)">
                             <template #avatar>
-                                <a-avatar :size="52" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item.user_id) }}</a-avatar>
+                                <a-avatar :size="52" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item) }}</a-avatar>
                             </template>
 
                             <template #author>
                                 <div class="comment-author-row">
-                                    <span class="user-name">{{ displayUser(item.user_id).username }}</span>
+                                    <span class="user-name">{{ item.nickname || '同学' }}</span>
                                     <span class="like-pill">
                                         <like-filled />
                                         {{ item.like }}
@@ -91,7 +91,6 @@ const {
     visibleSuggestions,
     hasMore,
     getUserInitial,
-    displayUser,
     displayAvatar,
     loadMore,
     goToSuggestionDetail,

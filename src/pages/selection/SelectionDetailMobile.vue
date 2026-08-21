@@ -11,7 +11,7 @@
         <section v-if="currentSelection" class="detail-card">
             <div class="card-top">
                 <div>
-                    <div class="user-name">{{ currentSelection.user_id }}</div>
+                    <div class="user-name">{{ currentSelection.nickname || '同学' }}</div>
                     <div class="meta-date">{{ currentSelection.date }}</div>
                 </div>
                 <div class="rate-chip">{{ getTargetRate(getSelectionTargetKey(currentSelection.id)) }}</div>
@@ -23,7 +23,7 @@
             </div>
             <div class="action-row">
                 <a-button @click="openReplyBox('selection', currentSelection.id)">{{ text.reply }}</a-button>
-                <a-button type="primary" @click="openRatingModal('selection', currentSelection.id, currentSelection.user_id)">{{ text.rateAction }}</a-button>
+                <a-button type="primary" @click="openRatingModal('selection', currentSelection.id, currentSelection.nickname || '同学')">{{ text.rateAction }}</a-button>
             </div>
             <div v-if="isReplyingTo('selection', currentSelection.id)" class="reply-box">
                 <div class="field-label">{{ detailText.replyBoxTitle }}</div>
@@ -41,7 +41,7 @@
                 <article v-for="item in pagedCommentList" :key="item.id" class="comment-card" :style="{ marginLeft: `${item.level * 12}px` }">
                     <div class="card-top">
                         <div>
-                            <div class="user-name">{{ item.user_id }}</div>
+                            <div class="user-name">{{ item.nickname || '同学' }}</div>
                             <div class="meta-date">{{ item.date }}</div>
                         </div>
                         <div class="rate-chip">{{ getTargetRate(getCommentTargetKey(item.id)) }}</div>
@@ -50,7 +50,7 @@
                     <div class="comment-body">{{ item.detail }}</div>
                     <div class="action-row">
                         <a-button @click="openReplyBox('comment', item.id)">{{ text.reply }}</a-button>
-                        <a-button type="primary" @click="openRatingModal('comment', item.id, item.user_id)">{{ text.rateAction }}</a-button>
+                        <a-button type="primary" @click="openRatingModal('comment', item.id, item.nickname || '同学')">{{ text.rateAction }}</a-button>
                     </div>
                     <div v-if="isReplyingTo('comment', item.id)" class="reply-box">
                         <div class="field-label">{{ detailText.replyCommentTitle }}</div>

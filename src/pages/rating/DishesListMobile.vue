@@ -34,7 +34,7 @@
             :position="item.position"
             :price-label="`${text.priceWithUnit} ${item.price}`"
             :rate="item.rate"
-            :rate-label="`${text.rate} ${item.rate}`"
+            :rate-label="`${text.rate} ${item.rate}（${item.rate_count}次）`"
         >
             <template #actions>
                 <a-button size="small" @click="openEditModal(item)">{{ text.addData }}</a-button>

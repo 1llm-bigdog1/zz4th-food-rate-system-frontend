@@ -37,7 +37,15 @@ const readSyncVersion = () => {
 const readLocalMenu = () => getCached(STORES.dishes);
 
 const toDish = (record) =>
-    new Dish(record.id, record.name, record.position, record.image, record.rate, record.price);
+    new Dish(
+        record.id,
+        record.name,
+        record.position,
+        record.image_url || record.image,
+        record.rate,
+        record.price,
+        record.rate_count ?? 0,
+    );
 
 const saveSyncVersion = async (version) => {
     await putRecord(STORES.meta, { id: MENU_SYNC_VERSION_KEY, value: version });

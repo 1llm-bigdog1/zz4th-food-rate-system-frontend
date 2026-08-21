@@ -28,8 +28,10 @@ export const uploadFiles = async (fileList = []) => {
             continue;
         }
         const result = await uploadImage(file);
-        if (result && result.url) {
-            urls.push(result.url);
+        // 统一使用后端返回的绝对地址 image_url（兼容旧字段 url）。
+        const url = result && (result.image_url || result.url);
+        if (url) {
+            urls.push(url);
         }
     }
     return urls;

@@ -12,10 +12,10 @@
             <div class="card-top">
                 <div class="author-chip">
                     <img v-if="displayAvatar(currentSuggestion.user_id)" :src="displayAvatar(currentSuggestion.user_id)" alt="" class="chip-avatar" />
-                    <span v-else>{{ getUserInitial(currentSuggestion.user_id) }}</span>
+                    <span v-else>{{ getUserInitial(currentSuggestion) }}</span>
                 </div>
                 <div class="card-headings">
-                    <div class="user-name">{{ displayUser(currentSuggestion.user_id).username }}</div>
+                    <div class="user-name">{{ currentSuggestion.nickname || '同学' }}</div>
                     <div class="meta-date">{{ currentSuggestion.date }}</div>
                 </div>
                 <button type="button" class="like-button" :class="{ liked: currentSuggestion.liked }" @click="toggleSuggestionLike">{{ currentSuggestion.liked ? text.likedAction : text.likeAction }} {{ currentSuggestion.like }}</button>
@@ -39,10 +39,10 @@
                     <div class="card-top">
                         <div class="author-chip small-chip">
                             <img v-if="displayAvatar(item.user_id)" :src="displayAvatar(item.user_id)" alt="" class="chip-avatar" />
-                            <span v-else>{{ getUserInitial(item.user_id) }}</span>
+                            <span v-else>{{ getUserInitial(item) }}</span>
                         </div>
                         <div class="card-headings">
-                            <div class="user-name">{{ displayUser(item.user_id).username }}</div>
+                            <div class="user-name">{{ item.nickname || '同学' }}</div>
                             <div class="meta-date">{{ item.date }}</div>
                         </div>
                         <button type="button" class="like-button" :class="{ liked: item.liked }" @click="toggleCommentLike(item.id)">{{ item.liked ? text.likedAction : text.likeAction }} {{ item.likes }}</button>
@@ -71,7 +71,7 @@
 <script setup>
 import MobilePageShell from '@/components/mobile/MobilePageShell.vue';
 import { useSuggestionDetailPage } from '@/composables/useSuggestionDetailPage';
-const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, displayUser, displayAvatar, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
+const { text, currentSuggestion, pagedCommentList, commentList, replyContent, submitting, currentPage, pageSize, pageSizeOptions, getUserInitial, displayAvatar, isReplyingTo, goBack, openReplyBox, cancelReply, toggleSuggestionLike, toggleCommentLike, submitReply } = useSuggestionDetailPage();
 </script>
 
 <style scoped>

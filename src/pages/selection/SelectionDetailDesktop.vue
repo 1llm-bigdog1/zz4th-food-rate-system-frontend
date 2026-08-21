@@ -17,10 +17,10 @@
                 <span class="panel-subtitle">{{ detailText.detailSubtitle }}</span>
             </div>
             <a-comment class="selection-comment detail-comment">
-                <template #avatar><a-avatar :size="56" class="user-avatar">{{ getUserInitial(currentSelection.user_id) }}</a-avatar></template>
+                <template #avatar><a-avatar :size="56" class="user-avatar">{{ getUserInitial(currentSelection) }}</a-avatar></template>
                 <template #author>
                     <div class="comment-author-row">
-                        <span class="user-name">{{ currentSelection.user_id }}</span>
+                        <span class="user-name">{{ currentSelection.nickname || '同学' }}</span>
                         <a-rate :value="getTargetRate(getSelectionTargetKey(currentSelection.id))" disabled allow-half class="inline-rate" />
                         <span class="reply-rate-number">{{ getTargetRate(getSelectionTargetKey(currentSelection.id)) }}</span>
                     </div>
@@ -37,7 +37,7 @@
                 </template>
                 <template #actions>
                     <span class="comment-action" @click="openReplyBox('selection', currentSelection.id)">{{ text.reply }}</span>
-                    <span class="comment-action" @click="openRatingModal('selection', currentSelection.id, currentSelection.user_id)">{{ text.rateAction }}</span>
+                    <span class="comment-action" @click="openRatingModal('selection', currentSelection.id, currentSelection.nickname || '同学')">{{ text.rateAction }}</span>
                 </template>
             </a-comment>
             <div v-if="isReplyingTo('selection', currentSelection.id)" class="reply-editor">
@@ -59,10 +59,10 @@
                     <a-list-item class="selection-list-item" :class="{ 'nested-comment-item': item.level > 0 }">
                         <div class="comment-thread">
                             <a-comment class="selection-comment" :style="{ marginLeft: `${item.level * 64}px` }">
-                                <template #avatar><a-avatar :size="48" class="user-avatar">{{ getUserInitial(item.user_id) }}</a-avatar></template>
+                                <template #avatar><a-avatar :size="48" class="user-avatar">{{ getUserInitial(item) }}</a-avatar></template>
                                 <template #author>
                                     <div class="comment-author-row">
-                                        <span class="user-name comment-user-name">{{ item.user_id }}</span>
+                                        <span class="user-name comment-user-name">{{ item.nickname || '同学' }}</span>
                                         <template v-if="getTargetRate(getCommentTargetKey(item.id)) > 0">
                                             <a-rate :value="getTargetRate(getCommentTargetKey(item.id))" disabled allow-half class="inline-rate" />
                                             <span class="reply-rate-number">{{ getTargetRate(getCommentTargetKey(item.id)) }}</span>
@@ -78,7 +78,7 @@
                                 </template>
                                 <template #actions>
                                     <span class="comment-action" @click="openReplyBox('comment', item.id)">{{ text.reply }}</span>
-                                    <span class="comment-action" @click="openRatingModal('comment', item.id, item.user_id)">{{ text.rateAction }}</span>
+                                    <span class="comment-action" @click="openRatingModal('comment', item.id, item.nickname || '同学')">{{ text.rateAction }}</span>
                                 </template>
                             </a-comment>
                             <div v-if="isReplyingTo('comment', item.id)" class="reply-editor inline-reply-editor" :style="{ marginLeft: `${item.level * 64 + 64}px` }">

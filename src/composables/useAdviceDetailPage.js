@@ -17,7 +17,7 @@ import { getAdvice } from '@/api/getAdvice';
 import { getAdviceComments } from '@/api/getAdviceComments';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
-import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayUser } from '@/utils/userDisplay';
 import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 建议详情页的回复树、分页和点赞逻辑由桌面/移动端共享。
@@ -85,7 +85,7 @@ export const useAdviceDetailPage = () => {
         return commentList.value.slice(start, start + pageSize.value);
     });
 
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
     const isReplyingTo = (type, id) => activeReplyTarget.value.type === type && activeReplyTarget.value.id === id;
 
     onMounted(() => {

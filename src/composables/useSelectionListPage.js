@@ -18,7 +18,6 @@ import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSelection } from '@/api/getSelection';
 import { useSyncedData } from '@/composables/useSyncedData';
-import { getDisplayInitial } from '@/utils/userDisplay';
 
 // 严选列表页相对复杂，包含分享表单和评分弹窗。
 // 这里把业务状态全部抽离，保证双端行为完全一致。
@@ -53,7 +52,7 @@ export const useSelectionListPage = () => {
     const ratingValue = ref(0);
     const ratingModalTitle = computed(() => `${text.rateTitlePrefix}${ratingTargetName.value}${text.rateTitleSuffix}`);
 
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
     const formatPosition = (pos) => `${text.purchasePrefix}${pos.floor}${text.floor}(${pos.window}${text.window})`;
 
     const goToSelectionDetail = (item) => {

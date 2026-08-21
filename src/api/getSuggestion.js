@@ -19,6 +19,7 @@ const toSuggestion = (record) =>
         record.like ?? 0,
         record.follow_comments ?? [],
         record.liked ?? false,
+        record.nickname ?? '',
     );
 
 export const getSuggestion = createSyncApi({

@@ -17,7 +17,6 @@ import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getSelection } from '@/api/getSelection';
 import { getSelectionComments } from '@/api/getSelectionComments';
 import { useSyncedData } from '@/composables/useSyncedData';
-import { getDisplayInitial } from '@/utils/userDisplay';
 
 // 严选详情页包含回复树和针对主贴/评论的评分状态。
 export const useSelectionDetailPage = () => {
@@ -85,7 +84,7 @@ export const useSelectionDetailPage = () => {
 
     const getSelectionTargetKey = (id) => `selection-${id}`;
     const getCommentTargetKey = (id) => `comment-${id}`;
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
     const formatPosition = (pos) => `${text.purchasePrefix}${pos.floor}${text.floor}(${pos.window}${text.window})`;
     const getTargetRate = (key) => targetRates.value[key] ?? 0;
     const isReplyingTo = (type, id) => activeReplyTarget.value.type === type && activeReplyTarget.value.id === id;
@@ -136,10 +135,22 @@ export const useSelectionDetailPage = () => {
                 message.error((result.message && String(result.message)) || '评分提交失败，请稍后重试');
                 return;
             }
+            // 以后端返回为准：最新评分、平均分与评分数量。
+            const latestScore =
+                result && typeof result.score === 'number' ? result.score : ratingValue.value;
             targetRates.value = {
                 ...targetRates.value,
-                [ratingTargetKey.value]: ratingValue.value,
+                [ratingTargetKey.value]: latestScore,
             };
+            if (ratingTargetType.value === 'selection' && currentSelection.value) {
+                if (result && typeof result.rate === 'number') {
+                    currentSelection.value.rate = result.rate;
+                }
+                if (result && typeof result.rate_count === 'number') {
+                    currentSelection.value.rate_count = result.rate_count;
+                }
+                await putRecord(STORES.selections, currentSelection.value);
+            }
             ratingModalVisible.value = false;
             message.success(text.submitRating);
         } catch (error) {

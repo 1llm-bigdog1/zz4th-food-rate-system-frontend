@@ -20,6 +20,7 @@ const toAdviceComment = (record) =>
         record.parent_id ?? null,
         record.likes ?? 0,
         record.liked ?? false,
+        record.nickname ?? '',
     );
 
 export const getAdviceComments = createSyncApi({

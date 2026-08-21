@@ -5,9 +5,10 @@
  * 3. 维护这类文件时，应尽量保持字段命名、默认值和导出方式一致，方便全项目复用。
  */
 export default class Advice {
-    constructor(id, user_id, date, comment, like = 0, follow_comments = [], liked = false) {
+    constructor(id, user_id, date, comment, like = 0, follow_comments = [], liked = false, nickname = '') {
         this.id = id;
         this.user_id = user_id;
+        this.nickname = nickname;
         this.date = date;
         this.comment = comment;
         this.like = like;

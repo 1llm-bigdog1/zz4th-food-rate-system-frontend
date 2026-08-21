@@ -15,6 +15,7 @@ import { buildFloorOptions, buildWindowOptions } from '@/utils/options';
 import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getMenu } from '@/api/getMenu';
 import { useSyncedData } from '@/composables/useSyncedData';
+import { putRecord } from '@/db/indexedDB';
 
 export const useDishesListPage = () => {
     const { ensureLoggedIn, handleApiError } = useLoginGuard();
@@ -162,6 +163,17 @@ export const useDishesListPage = () => {
             if (result && result.success === false) {
                 message.error((result.message && String(result.message)) || '评分提交失败，请稍后重试');
                 return;
+            }
+            // 以后端返回为准：更新最新评分、平均分与评分数量。
+            if (result && typeof result.rate === 'number') {
+                const dish = dishes.value.find((item) => item.id === ratingDishId.value);
+                if (dish) {
+                    dish.rate = result.rate;
+                    if (typeof result.rate_count === 'number') {
+                        dish.rate_count = result.rate_count;
+                    }
+                    await putRecord(STORES.dishes, dish);
+                }
             }
             ratingModalVisible.value = false;
             message.success(text.submitRating);

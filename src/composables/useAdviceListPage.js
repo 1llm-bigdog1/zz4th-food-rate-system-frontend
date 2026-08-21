@@ -17,7 +17,7 @@ import { useLoginGuard } from '@/composables/useLoginGuard';
 import { getAdvice } from '@/api/getAdvice';
 import { useSyncedData } from '@/composables/useSyncedData';
 import { getCurrentUserIdentity } from '@/utils/currentUser';
-import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayInitial, getDisplayUser } from '@/utils/userDisplay';
+import { ensureCurrentUserRegistered, getDisplayAvatar, getDisplayUser } from '@/utils/userDisplay';
 import { refreshLikeStatus } from '@/utils/likeSync';
 
 // 新品建议列表页的所有业务状态都集中在这里，
@@ -55,7 +55,8 @@ export const useAdviceListPage = () => {
     const submitting = ref(false);
     const likeSubmitting = ref(false);
 
-    const getUserInitial = (userId) => getDisplayInitial(userId);
+    // 显示昵称（不显示用户ID）：优先内容自带的 nickname，兜底“同”。
+    const getUserInitial = (item) => ((item && item.nickname) || '同').slice(0, 1);
 
     onMounted(() => {
         ensureCurrentUserRegistered();

@@ -62,10 +62,10 @@ export const useAccountDetailPage = () => {
         }
         return String(raw).slice(0, 10);
     });
-    // 等级：默认 LV1，历史数据 0/空 一律显示 Lv1。
+    // 等级：以后端返回为准（Lv0-Lv6，0 也是合法等级）。
     const displayLevel = computed(() => {
         const level = Number(user.value && user.value.level);
-        return Number.isInteger(level) && level >= 1 ? level : 1;
+        return Number.isInteger(level) ? level : 0;
     });
 
     const editing = ref(false);

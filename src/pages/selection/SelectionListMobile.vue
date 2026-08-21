@@ -15,7 +15,7 @@
             >
                 <div class="card-top">
                     <div>
-                        <div class="user-name">{{ item.user_id }}</div>
+                        <div class="user-name">{{ item.nickname || '同学' }}</div>
                         <div class="meta-date">{{ item.date }}</div>
                     </div>
                     <div class="rate-chip">{{ text.rate }} {{ item.rate }}</div>

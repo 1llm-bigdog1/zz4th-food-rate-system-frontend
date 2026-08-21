@@ -19,7 +19,7 @@
                     </div>
                     <div class="rank-meta">{{ item.position }}</div>
                     <div class="rank-bottom">
-                        <span class="meta-chip">{{ text.rate }} {{ item.rate }}</span>
+                        <span class="meta-chip">{{ text.rate }} {{ item.rate }}（{{ item.rate_count }}次）</span>
                         <span class="meta-chip">{{ text.priceWithUnit }} {{ item.price }}</span>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="rank-meta">{{ item.position }}</div>
                     <div class="rank-bottom">
-                        <span class="meta-chip">{{ text.rate }} {{ item.rate }}</span>
+                        <span class="meta-chip">{{ text.rate }} {{ item.rate }}（{{ item.rate_count }}次）</span>
                         <span class="meta-chip">{{ text.priceWithUnit }} {{ item.price }}</span>
                         <span class="meta-chip">{{ text.weightedScore }} {{ item.weightedScore }}</span>
                     </div>

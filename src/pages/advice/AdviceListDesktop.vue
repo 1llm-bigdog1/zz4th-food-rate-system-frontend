@@ -17,12 +17,12 @@
                     <a-list-item class="advice-list-item">
                         <a-comment class="advice-comment advice-comment-link" @click="goToAdviceDetail(item)">
                             <template #avatar>
-                                <a-avatar :size="52" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item.user_id) }}</a-avatar>
+                                <a-avatar :size="52" class="user-avatar" :src="displayAvatar(item.user_id)">{{ getUserInitial(item) }}</a-avatar>
                             </template>
 
                             <template #author>
                                 <div class="comment-author-row">
-                                    <span class="user-name">{{ displayUser(item.user_id).username }}</span>
+                                    <span class="user-name">{{ item.nickname || '同学' }}</span>
                                     <span class="like-pill">
                                         <like-filled />
                                         {{ item.like }}
@@ -91,7 +91,6 @@ const {
     visibleAdvices,
     hasMore,
     getUserInitial,
-    displayUser,
     displayAvatar,
     loadMore,
     goToAdviceDetail,
