@@ -13,10 +13,10 @@
 
       <div class="images">
         <div class="img-slot">
-          <img src="/src/static/images/Alipay.jpg" alt="支付宝" />
+          <img src="../static/images/Alipay.jpg" alt="支付宝" />
         </div>
         <div class="img-slot">
-          <img src="/src/static/images/WeChatPay.jpg" alt="微信支付" />
+          <img src="../static/images/WechatPay.jpg" alt="微信支付" />
         </div>
       </div>
     </div>
